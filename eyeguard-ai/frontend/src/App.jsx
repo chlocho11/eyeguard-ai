@@ -10,6 +10,7 @@ import {
   Minus, Plus, Star, Target, Info, Activity,
   TrendingUp, Users, Calendar, FastForward
 } from 'lucide-react';
+import { startSession, sendEvent, endSession } from "./api";
 
 // ==========================================
 // 1. Global Styles & Animations
@@ -292,10 +293,11 @@ function TopNavigation({ user, onEditProfile }) {
 // 8. Landing Page
 // ==========================================
 function LandingPage() {
-  const navigate = useNavigate();
-  const [authTab, setAuthTab] = useState('login');
-  const [showAuth, setShowAuth] = useState(false);
-  const { setUser } = React.useContext(UserContext);
+    const navigate = useNavigate();
+    const [authTab, setAuthTab] = useState('login');
+    const [showAuth, setShowAuth] = useState(false);
+    const { setUser } = React.useContext(UserContext);
+    const infoRef = React.useRef(null);
 
   const handleAuth = () => {
     setUser({ name: 'User', mascot: 'coder', theme: 'light' });
@@ -736,59 +738,168 @@ function ModeCard({ title, desc, icon, bg, cardBg, tags, onClick }) {
 // 12. Live Monitor Page
 // ==========================================
 function LivePage() {
-  const navigate = useNavigate();
-  const { user } = React.useContext(UserContext);
-  const mode = localStorage.getItem('eyeguard_mode') || 'eye_health';
-  const [sessionTime, setSessionTime] = useState(0);
-  const [totalBlinks, setTotalBlinks] = useState(0);
-  const [drowsyCount, setDrowsyCount] = useState(0);
-  const [focusPercent, setFocusPercent] = useState(100);
-  const [geminiTip, setGeminiTip] = useState('');
-  const [data, setData] = useState({ bpm: 15, ear: 0.35, too_close: false, too_far: false, drowsy: false });
-  const videoRef = React.useRef(null);
-  const canvasRef = React.useRef(null);
-  const wsRef = React.useRef(null);
-  const intervalRef = React.useRef(null);
+    const navigate = useNavigate();
+    const { user } = React.useContext(UserContext);
+    const mode = localStorage.getItem('eyeguard_mode') || 'eye_health';
+    const [sessionTime, setSessionTime] = useState(0);
+    const [totalBlinks, setTotalBlinks] = useState(0);
+    const [drowsyCount, setDrowsyCount] = useState(0);
+    const [focusPercent, setFocusPercent] = useState(100);
+    const [geminiTip, setGeminiTip] = useState('');
+    const [data, setData] = useState({ bpm: 15, ear: 0.35, too_close: false, too_far: false, drowsy: false });
+    const videoRef = React.useRef(null);
+    const canvasRef = React.useRef(null);
+    const wsRef = React.useRef(null);
+    const intervalRef = React.useRef(null);
+    const [sessionId, setSessionId] = useState(null);
+    const [camDenied, setCamDenied] = useState(false);
+    const [banner, setBanner] = useState(null);
+    const [audioReady, setAudioReady] = useState(false);
+
+    const [ear, setEar] = useState(0);
+    const [bpm, setBpm] = useState(0);
+
+    const faceRef = useRef(null);
+    const rafRef = useRef(null);
+
+    const blinkRef = useRef({
+    closed: false,
+    closeStart: 0,
+    lastBlinkTs: 0,
+    blinks: [],
+    });
+
+    // AI cooldown 
+    const aiRef = React.useRef({ lastTs: 0 });
+
+    function beep() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.connect(g);
+            g.connect(ctx.destination);
+            o.frequency.value = 880;
+            g.gain.value = 0.08;
+            o.start();
+            setTimeout(() => {
+            o.stop();
+            ctx.close();
+            }, 180);
+        } catch {}
+        }
+
+        function notify(text, { sound = true, vibrate = true } = {}) {
+        setBanner({ text });
+        if (sound && audioReady) beep();
+        if (vibrate && "vibrate" in navigator) navigator.vibrate([120, 80, 120]);
+        setTimeout(() => setBanner(null), 5000);
+        }
+
+        // Personalized AI trigger rules (mode-aware)
+        async function maybeAI({ mode, bpm, too_close, too_far, drowsy }) {
+        const now = Date.now();
+        if (now - aiRef.current.lastTs < 60_000) return; // 1 min cooldown
+
+        let should = false;
+        if (mode === "eye_health") {
+            // health: blink too low OR distance issue OR drowsy
+            should = bpm < 10 || too_close || too_far || drowsy;
+        } else if (mode === "productivity") {
+            // productivity: focus/drowsy + only critical blink issues
+            should = drowsy || bpm < 7;
+        }
+
+        if (!should) return;
+
+        aiRef.current.lastTs = now;
+        try {
+            const { tip } = await getTip({ bpm, too_close, too_far, drowsy, mode });
+            notify(tip, { sound: true, vibrate: true });
+        } catch {
+            // fallback
+            notify("Take a 20s break and blink slowly a few times.", { sound: true, vibrate: true });
+        }
+        }
 
   useEffect(() => {
     const timer = setInterval(() => setSessionTime(s => s + 1), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    let stream = null;
-    const startCamera = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) videoRef.current.srcObject = stream;
-        startSimulation();
-      } catch (err) {
-        startSimulation();
-      }
-    };
+    useEffect(() => {
+        let stream = null;
+        let cancelled = false;
 
-    const startSimulation = () => {
-      intervalRef.current = setInterval(() => {
-        const isDrowsy = Math.random() > 0.9;
-        setTotalBlinks(b => b + Math.floor(Math.random() * 3));
-        if (isDrowsy) setDrowsyCount(c => c + 1);
-        setFocusPercent(p => Math.max(0, p - (isDrowsy ? 2 : 0)));
-        setData({
-          bpm: Math.floor(Math.random() * 5) + 12,
-          ear: 0.2 + Math.random() * 0.2,
-          too_close: Math.random() > 0.85,
-          too_far: Math.random() > 0.9,
-          drowsy: isDrowsy
-        });
-      }, 2000);
-    };
+        const run = async () => {
+            // Camera
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoRef.current.srcObject = stream;
+            await videoRef.current.play();
 
-    startCamera();
-    return () => {
-      clearInterval(intervalRef.current);
-      if (stream) stream.getTracks().forEach(t => t.stop());
-    };
-  }, [mode]);
+            // Model
+            if (!faceRef.current) faceRef.current = await createFaceLandmarker();
+            const landmarker = faceRef.current;
+
+            const tick = () => {
+            if (cancelled) return;
+
+            const video = videoRef.current;
+            if (!video || video.readyState < 2) {
+                rafRef.current = requestAnimationFrame(tick);
+                return;
+            }
+
+            const t = performance.now();
+            const res = landmarker.detectForVideo(video, t);
+
+            if (res?.faceLandmarks?.length) {
+                const lm = res.faceLandmarks[0];
+                const { ear } = computeEyeMetrics(lm);
+                setEar(ear);
+
+                // Blink detection
+                const THRESH = 0.23; // tune if needed (0.20~0.28)
+                const MIN_CLOSE_MS = 80;
+                const MIN_GAP_MS = 200;
+
+                const st = blinkRef.current;
+
+                if (ear < THRESH) {
+                if (!st.closed) {
+                    st.closed = true;
+                    st.closeStart = Date.now();
+                }
+                } else {
+                if (st.closed) {
+                    const closeDur = Date.now() - st.closeStart;
+                    const gap = Date.now() - st.lastBlinkTs;
+
+                    if (closeDur >= MIN_CLOSE_MS && gap >= MIN_GAP_MS) {
+                    st.lastBlinkTs = Date.now();
+                    st.blinks.push(st.lastBlinkTs);
+                    st.blinks = st.blinks.filter((x) => Date.now() - x <= 60_000);
+                    setBpm(st.blinks.length); // blinks/min
+                    }
+                }
+                st.closed = false;
+                }
+            }
+
+            rafRef.current = requestAnimationFrame(tick);
+            };
+
+            rafRef.current = requestAnimationFrame(tick);
+        };
+
+        run();
+
+        return () => {
+            cancelled = true;
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            if (stream) stream.getTracks().forEach((t) => t.stop());
+        };
+        }, []);
 
   const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
@@ -818,6 +929,8 @@ function LivePage() {
               <span className="text-xs font-bold text-white tracking-wider">{data.too_close ? 'TOO CLOSE' : data.too_far ? 'TOO FAR' : 'GOOD DISTANCE'}</span>
             </div>
           </div>
+
+            <div>EAR: {ear.toFixed(3)} | Blink/min: {bpm}</div>
 
           <div className="bg-white/5 rounded-[32px] p-6 border border-white/10">
             <div className="flex justify-between text-sm font-bold uppercase tracking-widest text-white/50 mb-3">

@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* Optional: nice default smoothing */
 html, body {
   height: 100%;
 }

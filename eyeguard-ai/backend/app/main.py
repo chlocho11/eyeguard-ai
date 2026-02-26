@@ -1,6 +1,7 @@
 import os
 import asyncio
 from datetime import datetime
+from turtle import mode
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -76,7 +77,8 @@ def api_tip(payload: dict):
     too_close = bool(payload.get("too_close", False))
     too_far = bool(payload.get("too_far", False))
     drowsy = bool(payload.get("drowsy", False))
-    tip = gemini.tip(bpm=bpm, too_close=too_close, too_far=too_far, drowsy=drowsy)
+    mode = str(payload.get("mode", "eye_health"))
+    tip = gemini.tip(bpm=bpm, too_close=too_close, too_far=too_far, drowsy=drowsy, mode=mode)
     return {"tip": tip}
 
 @app.websocket("/ws/live")
