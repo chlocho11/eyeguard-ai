@@ -1,103 +1,91 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-import cv2
-import base64
-import json
+import os
 import asyncio
-import time
-from app.eye_tracker import EyeTracker
-from app.gemini_service import get_health_tip, get_session_summary
+from datetime import datetime
+from fastapi import FastAPI, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+# dotenv optional
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 
+from .models import SessionStartIn, SessionEventIn, SessionEndIn
+from .session_service import start_session, add_event, end_session, latest_session
+from .eye_simulator import sample_metrics
+
+# Gemini optional
+from .gemini_service import GeminiService
+
+app = FastAPI(title="EyeGuard API")
+
+origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins if origins else ["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-last_tip_time = {}
-last_tip_text = {}
-TIP_COOLDOWN  = 60
+gemini = None
+
+@app.on_event("startup")
+async def _startup():
+    global gemini
+    if os.getenv("GEMINI_API_KEY", "").strip():
+        gemini = GeminiService()
 
 @app.get("/")
 def root():
-    return {"status": "EyeGuard-AI backend running"}
+    return {"status": "EyeGuard backend running", "ts": datetime.utcnow().isoformat()}
 
-@app.websocket("/ws/track")
-async def websocket_track(websocket: WebSocket):
-    await websocket.accept()
+@app.get("/health")
+def health():
+    return {"ok": True}
 
-    # Read mode from query param: ?mode=health or ?mode=productivity
-    mode = websocket.query_params.get("mode", "health")
+@app.post("/api/session/start")
+def api_start_session(body: SessionStartIn):
+    sid = start_session(mode=body.mode, user_id=None)  # demo: no auth yet
+    return {"session_id": sid}
 
-    tracker = EyeTracker(mode=mode)
-    cap = cv2.VideoCapture(0)
+@app.post("/api/session/event")
+def api_event(body: SessionEventIn):
+    # Only store the fields you care about
+    event = body.model_dump()
+    add_event(body.session_id, event)
+    return {"ok": True}
 
-    if not cap.isOpened():
-        await websocket.send_text(json.dumps({"error": "Camera not found"}))
-        await websocket.close()
-        return
+@app.post("/api/session/end")
+def api_end(body: SessionEndIn):
+    summary = end_session(body.session_id)
+    return {"ok": True, "summary": summary}
 
-    blink_history = []  # (timestamp, bpm) for session summary
+@app.get("/api/session/latest")
+def api_latest():
+    data = latest_session(user_id=None)
+    return {"session": data}
 
+@app.post("/api/gemini/tip")
+def api_tip(payload: dict):
+    if gemini is None:
+        return {"tip": "(Gemini not configured) Try the 20-20-20 rule: look far for 20 seconds."}
+
+    bpm = int(payload.get("bpm", 15))
+    too_close = bool(payload.get("too_close", False))
+    too_far = bool(payload.get("too_far", False))
+    drowsy = bool(payload.get("drowsy", False))
+    tip = gemini.tip(bpm=bpm, too_close=too_close, too_far=too_far, drowsy=drowsy)
+    return {"tip": tip}
+
+@app.websocket("/ws/live")
+async def ws_live(ws: WebSocket):
+    await ws.accept()
     try:
         while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-
-            metrics = tracker.process_frame(frame)
-
-            # Track bpm over time for summary graph
-            if metrics.get("bpm", 0) > 0:
-                blink_history.append({
-                    "t": metrics["session_seconds"],
-                    "bpm": metrics["bpm"]
-                })
-
-            # Gemini tip logic
-            alert = metrics.get("alert")
-            tip   = last_tip_text.get(alert)
-
-            if alert:
-                now    = time.time()
-                last_t = last_tip_time.get(alert, 0)
-                if now - last_t > TIP_COOLDOWN:
-                    tip = await asyncio.to_thread(
-                        get_health_tip,
-                        alert,
-                        metrics["bpm"],
-                        metrics["bpm_drop_pct"],
-                        metrics["session_seconds"]
-                    )
-                    last_tip_time[alert] = now
-                    last_tip_text[alert] = tip
-
-            metrics["tip"] = tip
-            metrics["mode"] = mode
-            metrics["blink_history"] = blink_history[-60:]  # last 60 data points
-
-            _, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 60])
-            metrics["frame"] = base64.b64encode(buffer).decode("utf-8")
-
-            await websocket.send_text(json.dumps(metrics))
-            await asyncio.sleep(0.05)
-
-    except WebSocketDisconnect:
-        print("Client disconnected")
-    finally:
-        cap.release()
-
-@app.post("/summary")
-async def get_summary(data: dict):
-    summary = await asyncio.to_thread(
-        get_session_summary,
-        data.get("duration", 0),
-        data.get("avg_bpm", 0),
-        data.get("total_blinks", 0),
-        data.get("alert_count", 0),
-        data.get("mode", "health")
-    )
-    return {"summary": summary}
+            await ws.send_json(sample_metrics())
+            await asyncio.sleep(2)
+    except Exception:
+        # client disconnect etc.
+        pass

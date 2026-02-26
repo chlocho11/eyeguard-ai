@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* Optional: nice default smoothing */
+html, body {
+  height: 100%;
+}
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
