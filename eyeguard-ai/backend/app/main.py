@@ -1,7 +1,6 @@
 import os
 import asyncio
 from datetime import datetime
-from turtle import mode
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,8 +14,6 @@ except Exception:
 from .models import SessionStartIn, SessionEventIn, SessionEndIn
 from .session_service import start_session, add_event, end_session, latest_session
 from .eye_simulator import sample_metrics
-
-# Gemini optional
 from .gemini_service import GeminiService
 
 app = FastAPI(title="EyeGuard API")
@@ -30,7 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-gemini = None
+gemini = GeminiService | None = None
 
 @app.on_event("startup")
 async def _startup():
@@ -53,7 +50,6 @@ def api_start_session(body: SessionStartIn):
 
 @app.post("/api/session/event")
 def api_event(body: SessionEventIn):
-    # Only store the fields you care about
     event = body.model_dump()
     add_event(body.session_id, event)
     return {"ok": True}
@@ -71,7 +67,7 @@ def api_latest():
 @app.post("/api/gemini/tip")
 def api_tip(payload: dict):
     if gemini is None:
-        return {"tip": "(Gemini not configured) Try the 20-20-20 rule: look far for 20 seconds."}
+        return {"tip": "Try the 20-20-20 rule: look far for 20 seconds."}
 
     bpm = int(payload.get("bpm", 15))
     too_close = bool(payload.get("too_close", False))

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -10,16 +10,7 @@ import {
   Minus, Plus, Star, Target, Info, Activity,
   TrendingUp, Users, Calendar, FastForward
 } from 'lucide-react';
-
-// ── API helpers (talks to FastAPI backend) ──────────────────────────────────
-import { startSession, sendEvent, endSession, getTip } from "./api";
-
-// ── MediaPipe blink / distance helpers ─────────────────────────────────────
-import {
-  createBlinkDetector,
-  computeBlinkMetrics,
-  computeDistanceAlert,
-} from "./blinkDetector";
+import { startSession, sendEvent, endSession } from "./api";
 
 // ==========================================
 // 1. Global Styles & Animations
@@ -137,9 +128,9 @@ const getMascot = (skin, pupilClass) => {
     doctor: <g><rect x="25" y="30" width="50" height="35" fill="#b2ebf2" rx="10" /><rect x="32" y="65" width="10" height="12" fill="#00838f" /><rect x="58" y="65" width="10" height="12" fill="#00838f" /><rect x="30" y="75" width="14" height="6" fill="#ffffff" rx="2" /><rect x="56" y="75" width="14" height="6" fill="#ffffff" rx="2" /><circle cx="38" cy="40" r="6" fill="#fff" /><circle cx="62" cy="40" r="6" fill="#fff" /><circle cx="40" cy="40" r="3" fill="#000" className={pupilClass} /><circle cx="64" cy="40" r="3" fill="#000" className={pupilClass} /><path d="M 23 45 L 45 45 L 45 65 L 23 65 Z" fill="#ffffff" /><path d="M 77 45 L 55 45 L 55 65 L 77 65 Z" fill="#ffffff" /><path d="M 45 45 L 55 45 L 50 55 Z" fill="#80deea" /><g className="a-stetho" style={{ transformOrigin: '50px 45px' }}><path d="M 35 45 Q 50 65 65 45" fill="none" stroke="#424242" strokeWidth="2.5" /><line x1="50" y1="55" x2="50" y2="62" stroke="#424242" strokeWidth="2.5" /><circle cx="50" cy="64" r="3" fill="#cfd8dc" stroke="#424242" strokeWidth="1" /></g><rect x="70" y="55" width="10" height="10" fill="#b2ebf2" rx="3" /><rect x="65" y="45" width="18" height="22" fill="#d7ccc8" rx="2" transform="rotate(10 65 45)" /><rect x="67" y="47" width="14" height="18" fill="#ffffff" transform="rotate(10 65 45)" /><rect x="72" y="43" width="6" height="3" fill="#9e9e9e" transform="rotate(10 65 45)" /><g className="a-write" style={{ transformOrigin: '30px 60px' }}><rect x="25" y="52" width="10" height="10" fill="#b2ebf2" rx="3" /><rect x="30" y="48" width="3" height="12" fill="#1e88e5" rx="1" transform="rotate(30 30 48)" /><polygon points="34,58 35,61 32,60" fill="#212121" /></g></g>,
     chef: <g><rect x="25" y="30" width="50" height="35" fill="#fdfdfd" rx="10" /><rect x="32" y="65" width="10" height="12" fill="#e0e0e0" /><rect x="58" y="65" width="10" height="12" fill="#e0e0e0" /><rect x="30" y="75" width="14" height="6" fill="#424242" rx="2" /><rect x="56" y="75" width="14" height="6" fill="#424242" rx="2" /><circle cx="38" cy="40" r="6" fill="#2c3e50" /><circle cx="62" cy="40" r="6" fill="#2c3e50" /><circle cx="38" cy="40" r="5" fill="#fff" /><circle cx="62" cy="40" r="5" fill="#fff" /><circle cx="40" cy="40" r="3" fill="#000" className={pupilClass} /><circle cx="64" cy="40" r="3" fill="#000" className={pupilClass} /><circle cx="42" cy="55" r="1.5" fill="#9e9e9e" /><circle cx="42" cy="60" r="1.5" fill="#9e9e9e" /><circle cx="58" cy="55" r="1.5" fill="#9e9e9e" /><circle cx="58" cy="60" r="1.5" fill="#9e9e9e" /><path d="M 40 48 L 60 48 L 50 56 Z" fill="#e74c3c" /><path d="M 30 25 L 70 25 L 75 10 Q 60 0 50 10 Q 40 0 25 10 Z" fill="#ffffff" stroke="#eeeeee" strokeWidth="2" /><rect x="70" y="55" width="10" height="12" fill="#fdfdfd" rx="3" /><g className="a-pan" style={{ transformOrigin: '25px 55px' }}><rect x="20" y="55" width="10" height="12" fill="#fdfdfd" rx="3" /><rect x="-5" y="60" width="28" height="4" fill="#34495e" rx="2" /><path d="M -25 55 L -5 55 L -10 65 L -20 65 Z" fill="#2c3e50" /></g><ellipse cx="-15" cy="53" rx="8" ry="3" fill="#f1c40f" className="a-pancake" /></g>,
     graduate: <g><g className="a-walk-r" style={{ transformOrigin: '64px 65px' }}><rect x="58" y="65" width="12" height="18" fill="#f27d42" rx="2" /><path d="M 58 80 L 75 80 L 72 85 L 58 85 Z" fill="#212121" /></g><g className="a-walk-l" style={{ transformOrigin: '36px 65px' }}><rect x="30" y="65" width="12" height="18" fill="#f27d42" rx="2" /><path d="M 30 80 L 47 80 L 44 85 L 30 85 Z" fill="#212121" /></g><rect x="25" y="30" width="50" height="35" fill="#f27d42" rx="10" /><circle cx="38" cy="40" r="6" fill="#fff" /><circle cx="62" cy="40" r="6" fill="#fff" /><circle cx="40" cy="40" r="3" fill="#000" className={pupilClass} /><circle cx="64" cy="40" r="3" fill="#000" className={pupilClass} /><path d="M 23 50 L 45 50 L 50 65 L 23 65 Z" fill="#2c3e50" /><path d="M 77 50 L 55 50 L 50 65 L 77 65 Z" fill="#2c3e50" /><polygon points="45,50 55,50 50,58" fill="#fff" /><polygon points="48,53 52,53 50,65" fill="#c0392b" /><polygon points="50,15 20,25 50,35 80,25" fill="#212121" /><path d="M 35 25 L 65 25 L 60 35 L 40 35 Z" fill="#212121" /><g transform="translate(25, 25)" className="a-tassel"><line x1="0" y1="0" x2="0" y2="15" stroke="#f1c40f" strokeWidth="2" /><circle cx="0" cy="17" r="2" fill="#f1c40f" /></g><rect x="70" y="55" width="10" height="12" fill="#f27d42" rx="3" /><g className="a-swing" style={{ transformOrigin: '25px 55px' }}><rect x="20" y="55" width="10" height="12" fill="#f27d42" rx="3" /><rect x="10" y="65" width="28" height="20" fill="#5d4037" rx="3" /><rect x="16" y="61" width="16" height="6" fill="none" stroke="#3e2723" strokeWidth="3" rx="2" /><rect x="22" y="70" width="4" height="4" fill="#ffb300" /></g></g>,
-    scooter: <g><rect x="20" y="80" width="55" height="6" fill="#95a5a6" rx="3" /><rect x="65" y="45" width="6" height="38" fill="#7f8c8d" rx="2" /><rect x="55" y="45" width="20" height="5" fill="#34495e" rx="2" /><rect x="68" y="82" width="4" height="4" fill="#34495e" /><g className="a-wheel" style={{ transformOrigin: '70px 86px' }}><circle cx="70" cy="86" r="6" fill="#2c3e50" /><circle cx="70" cy="86" r="2" fill="#ecf0f1" /></g><rect x="28" y="82" width="4" height="4" fill="#34495e" /><g className="a-wheel" style={{ transformOrigin: '30px 86px' }}><circle cx="30" cy="86" r="6" fill="#2c3e50" /><circle cx="30" cy="86" r="2" fill="#ecf0f1" /></g><g><rect x="25" y="35" width="35" height="30" fill="#f1c40f" rx="8" /><path d="M 25 35 Q 42 15 60 35 Z" fill="#d35400" /><rect x="23" y="32" width="39" height="6" fill="#e67e22" rx="2" /><circle cx="40" cy="45" r="6" fill="#fff" /><circle cx="55" cy="45" r="6" fill="#fff" /><circle cx="42" cy="45" r="3" fill="#000" className={pupilClass} /><circle cx="57" cy="45" r="3" fill="#000" className={pupilClass} /><rect x="20" y="52" width="45" height="18" fill="#c0392b" rx="5" /><rect x="35" y="58" width="15" height="10" fill="#e74c3c" rx="2" /><rect x="45" y="43" width="15" height="10" fill="#c0392b" rx="4" /><rect x="55" y="44" width="8" height="8" fill="#f1c40f" rx="2" /><rect x="45" y="70" width="12" height="12" fill="#2980b9" /><rect x="45" y="78" width="18" height="6" fill="#d35400" rx="2" /><rect x="45" y="82" width="18" height="2" fill="#fff" /><g className="a-kick" style={{ transformOrigin: '31px 70px' }}><rect x="25" y="70" width="12" height="12" fill="#2980b9" /><rect x="15" y="78" width="18" height="6" fill="#d35400" rx="2" /><rect x="15" y="82" width="18" height="2" fill="#fff" /></g></g></g>,
+    scooter: <g><rect x="20" y="80" width="55" height="6" fill="#95a5a6" rx="3" /><rect x="65" y="45" width="6" height="38" fill="#7f8c8d" rx="2" /><rect x="55" y="45" width="20" height="5" fill="#34495e" rx="2" /><rect x="68" y="82" width="4" height="4" fill="#34495e" /><g className="a-wheel" style={{ transformOrigin: '70px 86px' }}><circle cx="70" cy="86" r="6" fill="#2c3e50" /><circle cx="70" cy="86" r="2" fill="#ecf0f1" /></g><rect x="28" y="82" width="4" height="4" fill="#34495e" /><g className="a-wheel" style={{ transformOrigin: '30px 86px' }}><circle cx="30" cy="86" r="6" fill="#2c3e50" /><circle cx="30" cy="86" r="2" fill="#ecf0f1" /></g><g><rect x="25" y="35" width="35" height="30" fill="#f1c40f" rx="8" /><path d="M 25" y="35 Q 42 15 60 35 Z" fill="#d35400" /><rect x="23" y="32" width="39" height="6" fill="#e67e22" rx="2" /><circle cx="40" cy="45" r="6" fill="#fff" /><circle cx="55" cy="45" r="6" fill="#fff" /><circle cx="42" cy="45" r="3" fill="#000" className={pupilClass} /><circle cx="57" cy="45" r="3" fill="#000" className={pupilClass} /><rect x="20" y="52" width="45" height="18" fill="#c0392b" rx="5" /><rect x="35" y="58" width="15" height="10" fill="#e74c3c" rx="2" /><rect x="45" y="43" width="15" height="10" fill="#c0392b" rx="4" /><rect x="55" y="44" width="8" height="8" fill="#f1c40f" rx="2" /><rect x="45" y="70" width="12" height="12" fill="#2980b9" /><rect x="45" y="78" width="18" height="6" fill="#d35400" rx="2" /><rect x="45" y="82" width="18" height="2" fill="#fff" /><g className="a-kick" style={{ transformOrigin: '31px 70px' }}><rect x="25" y="70" width="12" height="12" fill="#2980b9" /><rect x="15" y="78" width="18" height="6" fill="#d35400" rx="2" /><rect x="15" y="82" width="18" height="2" fill="#fff" /></g></g></g>,
     rocker: <g><g className="a-headbang"><rect x="25" y="30" width="50" height="35" fill="#d500f9" rx="10" /><rect x="30" y="38" width="18" height="8" fill="#212121" rx="2" /><rect x="52" y="38" width="18" height="8" fill="#212121" rx="2" /><rect x="48" y="40" width="4" height="2" fill="#212121" /><line x1="32" y1="38" x2="46" y2="44" stroke="#424242" strokeWidth="1" /><path d="M 25 35 Q 50 15 75 35" fill="none" stroke="#00e5ff" strokeWidth="4" /><rect x="18" y="32" width="8" height="16" fill="#00b8d4" rx="4" /><rect x="74" y="32" width="8" height="16" fill="#00b8d4" rx="4" /></g><rect x="32" y="65" width="10" height="12" fill="#1a237e" /><rect x="58" y="65" width="10" height="12" fill="#1a237e" /><rect x="30" y="75" width="14" height="8" fill="#ff4081" rx="2" /><rect x="56" y="75" width="14" height="8" fill="#ff4081" rx="2" /><rect x="30" y="81" width="14" height="2" fill="#fff" /><rect x="56" y="81" width="14" height="2" fill="#fff" /><rect x="70" y="50" width="10" height="10" fill="#d500f9" rx="3" /><g transform="rotate(-20 50 60)"><rect x="25" y="58" width="50" height="4" fill="#8d6e63" /><path d="M 25 50 L 40 50 Q 45 60 40 70 L 25 70 Q 15 60 25 50 Z" fill="#ff1744" /><circle cx="35" cy="60" r="4" fill="#ffffff" /><rect x="75" y="56" width="6" height="8" fill="#424242" rx="1" /></g><g className="a-strum" style={{ transformOrigin: '30px 65px' }}><rect x="28" y="55" width="10" height="12" fill="#d500f9" rx="3" /><polygon points="38,62 42,65 38,68" fill="#fff" /></g></g>,
-    astro: <g><rect x="20" y="30" width="60" height="38" fill="#f5f5f5" rx="15" /><rect x="28" y="68" width="16" height="14" fill="#f5f5f5" rx="4" /><rect x="56" y="68" width="16" height="14" fill="#f5f5f5" rx="4" /><rect x="26" y="80" width="20" height="8" fill="#9e9e9e" rx="3" /><rect x="54" y="80" width="20" height="8" fill="#9e9e9e" rx="3" /><line x1="30" y1="50" x2="70" y2="50" stroke="#e0e0e0" strokeWidth="2" /><rect x="35" y="55" width="10" height="6" fill="#64b5f6" rx="1" /><rect x="48" y="55" width="6" height="6" fill="#e53935" rx="1" /><rect x="57" y="55" width="6" height="6" fill="#4caf50" rx="1" /><circle cx="50" cy="35" r="22" fill="#ffffff" stroke="#e0e0e0" strokeWidth="2" /><ellipse cx="50" cy="35" rx="16" ry="12" fill="#1e88e5" /><path d="M 40 30 Q 50 25 60 30" stroke="#90caf9" strokeWidth="3" fill="none" strokeLinecap="round" /></g>,
+    astro: <g><rect x="20" y="30" width="60" height="38" fill="#f5f5f5" rx="15" /><rect x="28" y="68" width="16" height="14" fill="#f5f5f5" rx="4" /><rect x="56" y="68" width="16" height="14" fill="#f5f5f5" rx="4" /><rect x="26" y="80" width="20" height="8" fill="#9e9e9e" rx="3" /><rect x="54" y="80" width="20" height="8" fill="#9e9e9e" rx="3" /><line x1="30" y1="50" x2="70" y2="50" stroke="#e0e0e0" strokeWidth="2" /><rect x="35" y="55" width="10" height="6" fill="#64b5f6" rx="1" /><rect x="48" y="55" width="6" height="6" fill="#e53935" rx="1" /><rect x="57" y="55" width="6" height="6" fill="#4caf50" rx="1" /><circle cx="50" cy="35" r="22" fill="#ffffff" stroke="#e0e0e0" strokeWidth="2" /><ellipse cx="50" cy="35" rx="16" ry="12" fill="#1e88e5" /><path d="M 40 30 Q 50 25 60 30" stroke="#90caf9" strokeWidth="3" fill="none" strokeLinecap="round" /></g>
   };
   return mascots[skin] || mascots['coder'];
 };
@@ -302,11 +293,10 @@ function TopNavigation({ user, onEditProfile }) {
 // 8. Landing Page
 // ==========================================
 function LandingPage() {
-    const navigate = useNavigate();
-    const [authTab, setAuthTab] = useState('login');
-    const [showAuth, setShowAuth] = useState(false);
-    const { setUser } = React.useContext(UserContext);
-    const infoRef = React.useRef(null);
+  const navigate = useNavigate();
+  const [authTab, setAuthTab] = useState('login');
+  const [showAuth, setShowAuth] = useState(false);
+  const { setUser } = React.useContext(UserContext);
 
   const handleAuth = () => {
     setUser({ name: 'User', mascot: 'coder', theme: 'light' });
@@ -321,41 +311,246 @@ function LandingPage() {
           <span className="font-extrabold text-2xl tracking-tight"><span className="text-yellow-400">Eye</span><span className="text-white">Guard</span></span>
         </div>
         <div className="flex gap-6 items-center">
-          <button onClick={() => infoRef.current?.scrollIntoView({ behavior: 'smooth' })} className="hidden md:block text-white/80 hover:text-white font-bold transition-colors">About</button>
-          <button onClick={() => setShowAuth(true)} className="bg-white/10 hover:bg-white/20 text-white border border-white/30 px-5 py-2.5 rounded-2xl font-bold transition-all">Log in</button>
-          <button onClick={() => setShowAuth(true)} className="bg-white text-[#0f926e] px-5 py-2.5 rounded-2xl font-bold hover:bg-yellow-50 transition-all shadow-lg">Get Started Free</button>
+          <button onClick={() => { setShowAuth(true); setAuthTab('login'); }} className="font-bold hover:text-yellow-300 text-sm transition-colors tracking-wide">Log in</button>
+          <button onClick={() => { setShowAuth(true); setAuthTab('signup'); }} className="bg-yellow-400 text-emerald-900 px-7 py-2.5 rounded-full font-bold text-sm hover:bg-yellow-300 transition-colors shadow-lg">Sign up →</button>
         </div>
       </header>
 
-      <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 pt-20 pb-10 min-h-[70vh]">
-        <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="mb-6">
-          <span className="bg-white/20 text-white text-sm font-bold px-4 py-2 rounded-full border border-white/30">✨ AI-Powered Eye Health for Everyone</span>
-        </motion.div>
-        <motion.h1 initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="text-5xl md:text-7xl font-black text-white leading-tight mb-6 max-w-4xl">
-          Protect Your Eyes,<br /><span className="text-yellow-300">Boost Your Focus.</span>
-        </motion.h1>
-        <motion.p initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-xl text-white/80 font-medium max-w-xl mb-10">
-          Real-time blink detection, drowsiness alerts, and AI-powered coaching to keep your eyes healthy during long work sessions.
-        </motion.p>
-        <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="flex gap-4 flex-wrap justify-center">
-          <button onClick={() => setShowAuth(true)} className="bg-white text-[#0f926e] px-8 py-4 rounded-2xl font-black text-lg hover:bg-yellow-50 transition-all shadow-xl">Start for Free</button>
-          <button onClick={() => infoRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-white/10 border border-white/30 text-white px-8 py-4 rounded-2xl font-black text-lg hover:bg-white/20 transition-all">Learn More</button>
-        </motion.div>
-      </div>
-
-      <div ref={infoRef} className="relative z-10 w-full max-w-6xl mx-auto px-6 pb-20 grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-        {[
-          { icon: '👁️', title: 'Blink Rate Monitor', desc: 'MediaPipe AI tracks your blink rate in real-time and alerts you when you stop blinking enough.' },
-          { icon: '📏', title: 'Distance Detection', desc: 'Warns you when youre too close or too far from your screen to prevent strain.' },
-          { icon: '🤖', title: 'Gemini AI Coach', desc: 'Get personalised, witty tips from Gemini AI — a Duolingo-style coach for your eyes.' },
-        ].map(f => (
-          <div key={f.title} className="bg-white/10 border border-white/20 backdrop-blur-sm rounded-[28px] p-8 text-white">
-            <div className="text-4xl mb-4">{f.icon}</div>
-            <h3 className="font-black text-xl mb-2">{f.title}</h3>
-            <p className="text-white/70 font-medium">{f.desc}</p>
+      <main className="relative z-20 flex flex-col items-center pt-8 md:pt-12 px-4 pointer-events-none w-full">
+        <div className="text-center max-w-3xl z-30 pointer-events-auto">
+          <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight leading-[1.1] drop-shadow-md">
+            Protect the <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-400">eyes</span> <br className="hidden md:block"/> you use every day
+          </h1>
+          <p className="text-emerald-50 text-lg md:text-xl font-medium max-w-2xl mx-auto mb-10 leading-relaxed drop-shadow">
+            Your intelligent health assistant. Using real-time computer vision to monitor blink rates, distance, and fatigue, EyeGuard prevents digital burnout.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <button onClick={() => { setShowAuth(true); setAuthTab('signup'); }} className="bg-white text-emerald-700 px-8 py-3.5 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">Get Started</button>
           </div>
-        ))}
-      </div>
+        </div>
+      </main>
+
+        <div className="absolute bottom-0 left-0 w-full h-[65vh] overflow-hidden pointer-events-none z-10">
+            <svg
+                className="w-full h-full"
+                viewBox="0 0 1440 800"
+                preserveAspectRatio="xMidYMax meet"
+            >
+        <path d="M 0 350 Q 720 450 1440 350 L 1440 800 L 0 800 Z" fill="#10b981" />
+        <path d="M -220 300 Q 150 150 420 800 L -200 800 Z"fill="#018159" opacity="1"/>
+        <path d="M 1640 300 Q 1290 150 1020 800 L 1640 800 Z" fill="#018159"opacity="1"/>
+        <defs>
+          <g id="grass-tuft"><path d="M 0 10 Q 5 0 10 10 Q 15 0 20 10 Q 10 5 0 10 Z" fill="#059669" opacity="0.4" /></g>
+          <g id="big-tree">
+            <path d="M-5,0 L-5,-80 L5,-80 L5,0 Z" fill="#78350f" />
+            <circle cx="0" cy="-90" r="40" fill="#059669" />
+            <circle cx="-30" cy="-70" r="35" fill="#047857" />
+            <circle cx="30" cy="-75" r="30" fill="#065f46" />
+            <circle cx="-15" cy="-40" r="25" fill="#10b981" />
+            <circle cx="20" cy="-45" r="25" fill="#34d399" />
+          </g>
+          <g id="fence-post">
+            <rect x="-4" y="-40" width="8" height="40" fill="#ffffff" rx="1" />
+            <path d="M -4 -39 L 0 -45 L 4 -39 Z" fill="#ffffff" />
+            <rect x="0" y="-39" width="1" height="39" fill="#e2e8f0" />
+          </g>
+        </defs>
+
+        <use href="#big-tree" x="200" y="420" transform="scale(1.3)" />
+        <use href="#grass-tuft" x="150" y="450" transform="scale(1.5)" />
+        <use href="#grass-tuft" x="280" y="490" transform="scale(1.2)" />
+        <use href="#grass-tuft" x="380" y="520" transform="scale(2)" />
+        <use href="#grass-tuft" x="80" y="650" transform="scale(1.8)" />
+        <use href="#grass-tuft" x="320" y="680" transform="scale(1.4)" />
+        <use href="#grass-tuft" x="780" y="700" transform="scale(2.5)" />
+        <use href="#grass-tuft" x="1150" y="480" transform="scale(1.2)" />
+        <use href="#grass-tuft" x="980" y="620" transform="scale(1.7)" />
+        <use href="#grass-tuft" x="1100" y="670" transform="scale(1.4)" />
+        <use href="#grass-tuft" x="1350" y="680" transform="scale(2.2)" />
+
+        <path d="M 300 800 C 600 800, 900 500, 1280 290 L 1320 290 C 1200 500, 1100 800, 900 800 Z" fill="#f8f3e6" />
+
+        <g id="right-fences">
+          <path d="M 900 800 C 1100 800, 1200 500, 1340 300" stroke="#ffffff" strokeWidth="6" fill="none" transform="translate(0, -28)" />
+          <path d="M 900 800 C 1100 800, 1200 500, 1340 300" stroke="#ffffff" strokeWidth="6" fill="none" transform="translate(0, -12)" />
+          <use href="#fence-post" transform="translate(900, 800) scale(1.5)" />
+          <use href="#fence-post" transform="translate(970, 770) scale(1.3)" />
+          <use href="#fence-post" transform="translate(1040, 700) scale(1.1)" />
+          <use href="#fence-post" transform="translate(1110, 610) scale(0.9)" />
+          <use href="#fence-post" transform="translate(1180, 510) scale(0.7)" />
+          <use href="#fence-post" transform="translate(1250, 410) scale(0.5)" />
+          <use href="#fence-post" transform="translate(1290, 350) scale(0.35)" />
+          <use href="#fence-post" transform="translate(1325, 310) scale(0.2)" />
+        </g>
+
+        <g id="left-fences">
+          <path d="M 300 800 C 600 800, 900 500, 1260 300" stroke="#ffffff" strokeWidth="6" fill="none" transform="translate(0, -28)" />
+          <path d="M 300 800 C 600 800, 900 500, 1260 300" stroke="#ffffff" strokeWidth="6" fill="none" transform="translate(0, -12)" />
+          <use href="#fence-post" transform="translate(300, 800) scale(1.5)" />
+          <use href="#fence-post" transform="translate(460, 770) scale(1.3)" />
+          <use href="#fence-post" transform="translate(610, 700) scale(1.1)" />
+          <use href="#fence-post" transform="translate(750, 610) scale(0.9)" />
+          <use href="#fence-post" transform="translate(890, 510) scale(0.7)" />
+          <use href="#fence-post" transform="translate(1020, 410) scale(0.5)" />
+          <use href="#fence-post" transform="translate(1120, 350) scale(0.35)" />
+          <use href="#fence-post" transform="translate(1220, 310) scale(0.2)" />
+        </g>
+
+        <g transform="translate(1300, 285) scale(0.85)">
+          <rect x="-40" y="-40" width="80" height="40" fill="#ffffff" />
+          <rect x="-45" y="-40" width="90" height="5" fill="#e2e8f0" />
+          <polygon points="-50,-40 0,-85 50,-40" fill="#ef4444" />
+          <polygon points="-40,-40 0,-75 40,-40" fill="#dc2626" opacity="0.4" />
+          <rect x="-25" y="-75" width="12" height="25" fill="#ef4444" />
+          <rect x="-28" y="-80" width="18" height="5" fill="#ffffff" />
+          <rect x="-12" y="-20" width="12" height="20" fill="#1e293b" />
+          <circle cx="-3" cy="-10" r="1.5" fill="#fcd34d" />
+          <rect x="15" y="-25" width="14" height="14" fill="#38bdf8" />
+          <rect x="15" y="-25" width="14" height="14" fill="none" stroke="#e2e8f0" strokeWidth="2" />
+          <line x1="22" y1="-25" x2="22" y2="-11" stroke="#e2e8f0" strokeWidth="2" />
+          <line x1="15" y1="-18" x2="29" y2="-18" stroke="#e2e8f0" strokeWidth="2" />
+        </g>
+
+        <svg x="1140" y="190" width="90" height="90" viewBox="0 0 100 100" overflow="visible">
+          <g transform="translate(0,0)"><g className="a-float"><ellipse cx="50" cy="90" rx="35" ry="10" fill="#cbd5e1" /><ellipse cx="35" cy="87" rx="6" ry="2" fill="#94a3b8" /><ellipse cx="65" cy="92" rx="4" ry="1.5" fill="#94a3b8" /><ellipse cx="48" cy="93" rx="8" ry="2" fill="#94a3b8" /><rect x="20" y="30" width="60" height="38" fill="#f5f5f5" rx="15" /><rect x="28" y="68" width="16" height="14" fill="#f5f5f5" rx="4" /><rect x="56" y="68" width="16" height="14" fill="#f5f5f5" rx="4" /><rect x="26" y="80" width="20" height="8" fill="#9e9e9e" rx="3" /><rect x="54" y="80" width="20" height="8" fill="#9e9e9e" rx="3" /><line x1="30" y1="50" x2="70" y2="50" stroke="#e0e0e0" strokeWidth="2" /><rect x="35" y="55" width="10" height="6" fill="#64b5f6" rx="1" /><rect x="48" y="55" width="6" height="6" fill="#e53935" rx="1" /><rect x="57" y="55" width="6" height="6" fill="#4caf50" rx="1" /><circle cx="50" cy="35" r="22" fill="#ffffff" stroke="#e0e0e0" strokeWidth="2" /><ellipse cx="50" cy="35" rx="16" ry="12" fill="#1e88e5" /><path d="M 40 30 Q 50 25 60 30" stroke="#90caf9" strokeWidth="3" fill="none" strokeLinecap="round" /><circle cx="45" cy="35" r="2" fill="#fff" /><circle cx="55" cy="35" r="2" fill="#fff" /><rect x="15" y="45" width="12" height="12" fill="#f5f5f5" rx="4" /><rect x="73" y="45" width="12" height="12" fill="#f5f5f5" rx="4" /><rect x="80" y="20" width="4" height="60" fill="#9e9e9e" rx="2" /><g className="a-flag"><path d="M 82 25 L 105 25 L 100 35 L 105 45 L 82 45 Z" fill="#e53935" /></g></g></g>
+        </svg>
+
+        <svg x="1200" y="320" width="80" height="80" viewBox="0 0 100 100" overflow="visible">
+          <g transform="translate(50,50) scale(-1, 1) translate(-50,-50)"><g className="a-bounce"><g className="a-walk-r" style={{ transformOrigin: '64px 65px' }}><rect x="58" y="65" width="12" height="18" fill="#f27d42" rx="2" /><path d="M 58 80 L 75 80 L 72 85 L 58 85 Z" fill="#212121" /></g><g className="a-walk-l" style={{ transformOrigin: '36px 65px' }}><rect x="30" y="65" width="12" height="18" fill="#f27d42" rx="2" /><path d="M 30 80 L 47 80 L 44 85 L 30 85 Z" fill="#212121" /></g><rect x="25" y="30" width="50" height="35" fill="#f27d42" rx="10" /><circle cx="38" cy="40" r="6" fill="#fff" /><circle cx="62" cy="40" r="6" fill="#fff" /><circle cx="40" cy="40" r="3" fill="#000" className="a-blink" /><circle cx="64" cy="40" r="3" fill="#000" className="a-blink" /><path d="M 23 50 L 45 50 L 50 65 L 23 65 Z" fill="#2c3e50" /><path d="M 77 50 L 55 50 L 50 65 L 77 65 Z" fill="#2c3e50" /><polygon points="45,50 55,50 50,58" fill="#fff" /><polygon points="48,53 52,53 50,65" fill="#c0392b" /><polygon points="50,15 20,25 50,35 80,25" fill="#212121" /><path d="M 35 25 L 65 25 L 60 35 L 40 35 Z" fill="#212121" /><g transform="translate(25, 25)" className="a-tassel"><line x1="0" y1="0" x2="0" y2="15" stroke="#f1c40f" strokeWidth="2" /><circle cx="0" cy="17" r="2" fill="#f1c40f" /></g><rect x="70" y="55" width="10" height="12" fill="#f27d42" rx="3" /><g className="a-swing" style={{ transformOrigin: '25px 55px' }}><rect x="20" y="55" width="10" height="12" fill="#f27d42" rx="3" /><rect x="10" y="65" width="28" height="20" fill="#5d4037" rx="3" /><rect x="16" y="61" width="16" height="6" fill="none" stroke="#3e2723" strokeWidth="3" rx="2" /><rect x="22" y="70" width="4" height="4" fill="#ffb300" /></g></g></g>
+        </svg>
+
+        <svg x="1000" y="350" width="90" height="90" viewBox="0 0 100 100" overflow="visible">
+          <g className="a-bounce"><rect x="25" y="30" width="50" height="35" fill="#66bb6a" rx="10" /><rect x="32" y="65" width="10" height="12" fill="#66bb6a" /><rect x="58" y="65" width="10" height="12" fill="#66bb6a" /><rect x="30" y="75" width="14" height="6" fill="#795548" rx="2" /><rect x="56" y="75" width="14" height="6" fill="#795548" rx="2" /><circle cx="40" cy="45" r="6" fill="#fff" /><circle cx="60" cy="45" r="6" fill="#fff" /><circle cx="42" cy="45" r="3" fill="#000" className="a-blink" /><circle cx="62" cy="45" r="3" fill="#000" className="a-blink" /><circle cx="36" cy="48" r="2" fill="#81c784" /><circle cx="64" cy="48" r="2" fill="#81c784" /><path d="M 23 52 L 77 52 L 80 65 L 20 65 Z" fill="#fff9c4" rx="2" /><circle cx="30" cy="56" r="2.5" fill="#f48fb1" /><circle cx="45" cy="60" r="2.5" fill="#f48fb1" /><circle cx="60" cy="55" r="2.5" fill="#f48fb1" /><circle cx="70" cy="62" r="2.5" fill="#f48fb1" /><ellipse cx="50" cy="22" rx="25" ry="8" fill="#d4e157" /><path d="M 35 22 Q 50 5 65 22 Z" fill="#cddc39" /><path d="M 35 22 Q 50 15 65 22" stroke="#ffb74d" strokeWidth="3" fill="none" /><g className="a-plant" style={{ transformOrigin: '73px 58px' }}><rect x="63" y="56" width="10" height="10" fill="#66bb6a" rx="3" /><path d="M 68 53 L 88 53 L 84 66 L 72 66 Z" fill="#d84315" /><path d="M 78 53 Q 68 38 73 33 Q 83 38 78 53" fill="#4caf50" /><path d="M 78 53 Q 88 33 83 28 Q 73 33 78 53" fill="#8bc34a" /></g><g className="a-dig" style={{ transformOrigin: '27px 60px' }}><rect x="22" y="55" width="10" height="10" fill="#66bb6a" rx="3" /><rect x="18" y="50" width="4" height="15" fill="#795548" rx="1" transform="rotate(-20 20 57)" /><path d="M 12 62 L 18 75 L 22 73 Z" fill="#9e9e9e" /></g></g>
+        </svg>
+
+        <svg x="1120" y="440" width="140" height="140" viewBox="0 0 100 100" overflow="visible">
+          <g transform="translate(50,50) scale(-1, 1) translate(-50,-50)"><g className="a-bounce"><rect x="25" y="30" width="50" height="35" fill="#fdfdfd" rx="10" /><rect x="32" y="65" width="10" height="12" fill="#e0e0e0" /><rect x="58" y="65" width="10" height="12" fill="#e0e0e0" /><rect x="30" y="75" width="14" height="6" fill="#424242" rx="2" /><rect x="56" y="75" width="14" height="6" fill="#424242" rx="2" /><circle cx="38" cy="40" r="6" fill="#2c3e50" /><circle cx="62" cy="40" r="6" fill="#2c3e50" /><circle cx="38" cy="40" r="5" fill="#fff" /><circle cx="62" cy="40" r="5" fill="#fff" /><circle cx="40" cy="40" r="3" fill="#000" className="a-blink" /><circle cx="64" cy="40" r="3" fill="#000" className="a-blink" /><circle cx="42" cy="55" r="1.5" fill="#9e9e9e" /><circle cx="42" cy="60" r="1.5" fill="#9e9e9e" /><circle cx="58" cy="55" r="1.5" fill="#9e9e9e" /><circle cx="58" cy="60" r="1.5" fill="#9e9e9e" /><path d="M 40 48 L 60 48 L 50 56 Z" fill="#e74c3c" /><path d="M 30 25 L 70 25 L 75 10 Q 60 0 50 10 Q 40 0 25 10 Z" fill="#ffffff" stroke="#eeeeee" strokeWidth="2" /><rect x="70" y="55" width="10" height="12" fill="#fdfdfd" rx="3" /><g className="a-pan" style={{ transformOrigin: '25px 55px' }}><rect x="20" y="55" width="10" height="12" fill="#fdfdfd" rx="3" /><rect x="-5" y="60" width="28" height="4" fill="#34495e" rx="2" /><path d="M -25 55 L -5 55 L -10 65 L -20 65 Z" fill="#2c3e50" /></g><ellipse cx="-15" cy="53" rx="8" ry="3" fill="#f1c40f" className="a-pancake" /></g></g>
+        </svg>
+
+        <svg x="820" y="480" width="140" height="140" viewBox="0 0 100 100" overflow="visible">
+          <g className="a-bounce"><g transform="translate(45, -10)"><circle cx="5" cy="5" r="16" fill="#fcd34d" className="a-glow" /><path d="M0,8 C0,4 10,4 10,8 C10,11 7,13 7,16 L3,16 C3,13 0,11 0,8 Z" fill="#fbbf24" /><rect x="3" y="16" width="4" height="3" fill="#9ca3af" /><path d="M3,20 L7,20 L5,22 Z" fill="#4b5563" /><line x1="5" y1="2" x2="5" y2="-2" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" /><line x1="-1" y1="4" x2="-4" y2="1" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" /><line x1="11" y1="4" x2="14" y2="1" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" /></g><rect x="25" y="30" width="50" height="35" fill="#64b5f6" rx="10" /><rect x="32" y="65" width="10" height="12" fill="#1565c0" /><rect x="58" y="65" width="10" height="12" fill="#1565c0" /><rect x="28" y="75" width="16" height="6" fill="#212121" rx="2" /><rect x="56" y="75" width="16" height="6" fill="#212121" rx="2" /><circle cx="30" cy="25" r="8" fill="#1565c0" /><circle cx="45" cy="20" r="10" fill="#1565c0" /><circle cx="60" cy="22" r="9" fill="#1565c0" /><circle cx="70" cy="30" r="7" fill="#1565c0" /><circle cx="25" cy="35" r="7" fill="#1565c0" /><path d="M 25 50 L 75 50 L 70 65 L 30 65 Z" fill="#8d6e63" /><polygon points="45,50 55,50 50,58" fill="#bbdefb" /><polygon points="45,52 50,55 45,58" fill="#d32f2f" /><polygon points="55,52 50,55 55,58" fill="#d32f2f" /><circle cx="50" cy="55" r="1.5" fill="#b71c1c" /><g><circle cx="38" cy="42" r="8" fill="none" stroke="#e3f2fd" strokeWidth="2" /><circle cx="62" cy="42" r="8" fill="none" stroke="#e3f2fd" strokeWidth="2" /><line x1="46" y1="42" x2="54" y2="42" stroke="#e3f2fd" strokeWidth="2" /><circle cx="38" cy="42" r="3" fill="#000" className="a-blink" /><circle cx="62" cy="42" r="3" fill="#000" className="a-blink" /><rect x="30" y="34" width="40" height="16" fill="#ffffff" className="a-gleam" style={{clipPath: 'url(#glassesClip2)'}} /><clipPath id="glassesClip2"><circle cx="38" cy="42" r="8" /><circle cx="62" cy="42" r="8" /></clipPath></g><rect x="18" y="52" width="12" height="8" fill="#e3f2fd" rx="3" transform="rotate(-15 25 55)" /><rect x="25" y="56" width="8" height="6" fill="#64b5f6" rx="2" className="a-type-l" /><g transform="translate(55, 52)"><path d="M 5 0 L 25 0 L 22 15 L 2 15 Z" fill="#b0bec5" /><path d="M 0 15 L 25 15 L 28 20 L -3 20 Z" fill="#90a4ae" /><circle cx="13" cy="7" r="2" fill="#fff" opacity="0.6" /></g><rect x="68" y="50" width="12" height="8" fill="#e3f2fd" rx="3" transform="rotate(20 75 55)" /><rect x="62" y="58" width="8" height="6" fill="#64b5f6" rx="2" className="a-type-r" /></g>
+        </svg>
+
+        <svg x="930" y="480" width="140" height="140" viewBox="0 0 100 100" overflow="visible">
+          <g transform="translate(50,50) scale(-1, 1) translate(-50,-50)"><g className="a-bounce"><rect x="25" y="30" width="50" height="35" fill="#b2ebf2" rx="10" /><rect x="32" y="65" width="10" height="12" fill="#00838f" /><rect x="58" y="65" width="10" height="12" fill="#00838f" /><rect x="30" y="75" width="14" height="6" fill="#ffffff" rx="2" /><rect x="56" y="75" width="14" height="6" fill="#ffffff" rx="2" /><circle cx="38" cy="40" r="6" fill="#fff" /><circle cx="62" cy="40" r="6" fill="#fff" /><circle cx="40" cy="40" r="3" fill="#000" className="a-blink" /><circle cx="64" cy="40" r="3" fill="#000" className="a-blink" /><path d="M 23 45 L 45 45 L 45 65 L 23 65 Z" fill="#ffffff" /><path d="M 77 45 L 55 45 L 55 65 L 77 65 Z" fill="#ffffff" /><path d="M 45 45 L 55 45 L 50 55 Z" fill="#80deea" /><g className="a-stetho" style={{ transformOrigin: '50px 45px' }}><path d="M 35 45 Q 50 65 65 45" fill="none" stroke="#424242" strokeWidth="2.5" /><line x1="50" y1="55" x2="50" y2="62" stroke="#424242" strokeWidth="2.5" /><circle cx="50" cy="64" r="3" fill="#cfd8dc" stroke="#424242" strokeWidth="1" /></g><rect x="70" y="55" width="10" height="10" fill="#b2ebf2" rx="3" /><rect x="65" y="45" width="18" height="22" fill="#d7ccc8" rx="2" transform="rotate(10 65 45)" /><rect x="67" y="47" width="14" height="18" fill="#ffffff" transform="rotate(10 65 45)" /><rect x="72" y="43" width="6" height="3" fill="#9e9e9e" transform="rotate(10 65 45)" /><g className="a-write" style={{ transformOrigin: '30px 60px' }}><rect x="25" y="52" width="10" height="10" fill="#b2ebf2" rx="3" /><rect x="30" y="48" width="3" height="12" fill="#1e88e5" rx="1" transform="rotate(30 30 48)" /><polygon points="34,58 35,61 32,60" fill="#212121" /></g></g></g>
+        </svg>
+
+        <svg x="560" y="480" width="130" height="130" viewBox="0 0 100 100" overflow="visible">
+          <g className="a-bounce"><path d="M 25 35 Q 25 25 35 25 L 45 25 Q 50 25 50 30 L 50 65 L 25 65 Z" fill="#9575cd" /> 
+            <path d="M 50 30 Q 50 25 55 25 L 65 25 Q 75 25 75 35 L 75 65 L 50 65 Z" fill="#ff8a65" />
+            <path d="M 50 25 Q 45 35 50 45 Q 55 55 50 65" fill="none" stroke="#fff" strokeWidth="2" opacity="0.5"/>
+            <rect x="30" y="65" width="12" height="15" fill="#ff8a65" rx="2" /><rect x="58" y="65" width="12" height="15" fill="#ff8a65" rx="2" />
+            <circle cx="38" cy="40" r="6" fill="#fff" /><circle cx="62" cy="40" r="6" fill="#fff" />
+            <circle cx="40" cy="40" r="3" fill="#000" className="a-blink" /><circle cx="64" cy="40" r="3" fill="#000" className="a-blink" />
+            <ellipse cx="40" cy="22" rx="16" ry="6" fill="#795548" transform="rotate(-15 40 22)" /><circle cx="44" cy="15" r="3" fill="#795548" />
+            <path d="M 25 50 L 75 50 L 75 65 L 25 65 Z" fill="#5c6bc0" />
+            <rect x="30" y="45" width="5" height="10" fill="#3949ab" rx="1" /><rect x="65" y="45" width="5" height="10" fill="#3949ab" rx="1" />
+            <circle cx="32.5" cy="52" r="1.5" fill="#fdd835" /><circle cx="67.5" cy="52" r="1.5" fill="#fdd835" />
+            <rect x="40" y="52" width="20" height="8" fill="#3949ab" rx="2" />
+            <circle cx="35" cy="60" r="2" fill="#e91e63" /><circle cx="65" cy="58" r="1.5" fill="#00bcd4" />
+            <g className="a-palette">
+              <rect x="70" y="38" width="12" height="12" fill="#ff8a65" rx="4" />
+              <path d="M 75 35 Q 95 30 90 50 Q 85 60 70 50 Z" fill="#d7ccc8" />
+              <circle cx="75" cy="45" r="3" fill="#5d4037" /><circle cx="82" cy="38" r="2" fill="#f44336" />
+              <circle cx="88" cy="42" r="2" fill="#2196f3" /><circle cx="85" cy="48" r="2" fill="#ffeb3b" />
+            </g>
+            <g className="a-paint" style={{ transformOrigin: '23px 51px' }}>
+              <rect x="18" y="45" width="10" height="12" fill="#ff8a65" rx="4" />
+              <rect x="12" y="20" width="4" height="35" fill="#8d6e63" transform="rotate(-15 14 37)" rx="1" />
+              <path d="M 8 15 Q 15 10 18 20 Z" fill="#d32f2f" transform="rotate(-15 14 37)" />
+            </g>
+            <g transform="translate(85, 25)">
+              <line x1="15" y1="10" x2="0" y2="45" stroke="#8b4513" strokeWidth="3" strokeLinecap="round" />
+              <line x1="15" y1="10" x2="30" y2="45" stroke="#8b4513" strokeWidth="3" strokeLinecap="round" />
+              <line x1="15" y1="10" x2="15" y2="50" stroke="#8b4513" strokeWidth="3" strokeLinecap="round" />
+              <rect x="0" y="5" width="30" height="25" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="2" rx="2" />
+              <rect x="4" y="9" width="22" height="17" fill="#e0f2fe" />
+              <circle cx="20" cy="14" r="3" fill="#fcd34d" />
+              <path d="M 4 26 L 10 18 L 16 26 Z" fill="#34d399" />
+              <path d="M 12 26 L 18 16 L 26 26 Z" fill="#10b981" />
+            </g>
+          </g>
+        </svg>
+
+        <svg x="510" y="590" width="180" height="180" viewBox="0 0 100 100" overflow="visible">
+          <g className="a-bounce">
+            <g className="a-headbang">
+              <rect x="25" y="30" width="50" height="35" fill="#d500f9" rx="10" />
+              <rect x="30" y="38" width="18" height="8" fill="#212121" rx="2" /><rect x="52" y="38" width="18" height="8" fill="#212121" rx="2" />
+              <rect x="48" y="40" width="4" height="2" fill="#212121" /><line x1="32" y1="38" x2="46" y2="44" stroke="#424242" strokeWidth="1" />
+              <path d="M 25 35 Q 50 15 75 35" fill="none" stroke="#00e5ff" strokeWidth="4" />
+              <rect x="18" y="32" width="8" height="16" fill="#00b8d4" rx="4" /><rect x="74" y="32" width="8" height="16" fill="#00b8d4" rx="4" />
+            </g>
+            <rect x="32" y="65" width="10" height="12" fill="#1a237e" /><rect x="58" y="65" width="10" height="12" fill="#1a237e" />
+            <rect x="30" y="75" width="14" height="8" fill="#ff4081" rx="2" /><rect x="56" y="75" width="14" height="8" fill="#ff4081" rx="2" />
+            <rect x="30" y="81" width="14" height="2" fill="#fff" /><rect x="56" y="81" width="14" height="2" fill="#fff" />
+            <rect x="70" y="50" width="10" height="10" fill="#d500f9" rx="3" />
+            <g transform="rotate(-20 50 60)">
+              <rect x="25" y="58" width="50" height="4" fill="#8d6e63" />
+              <path d="M 25 50 L 40 50 Q 45 60 40 70 L 25 70 Q 15 60 25 50 Z" fill="#ff1744" />
+              <circle cx="35" cy="60" r="4" fill="#ffffff" /><rect x="75" y="56" width="6" height="8" fill="#424242" rx="1" />
+            </g>
+            <g className="a-strum" style={{ transformOrigin: '30px 65px' }}>
+              <rect x="28" y="55" width="10" height="12" fill="#d500f9" rx="3" />
+              <polygon points="38,62 42,65 38,68" fill="#fff" />
+            </g>
+          </g>
+        </svg>
+
+        <svg x="780" y="530" width="180" height="180" viewBox="0 0 100 100" overflow="visible">
+          <g transform="translate(50,50) scale(-1, 1) translate(-50,-50)">
+            <g className="a-drive">
+              <g className="a-bump">
+                <rect x="20" y="80" width="55" height="6" fill="#95a5a6" rx="3" />
+                <rect x="65" y="45" width="6" height="38" fill="#7f8c8d" rx="2" /><rect x="55" y="45" width="20" height="5" fill="#34495e" rx="2" />
+                <g className="a-wheel" style={{ transformOrigin: '70px 86px' }}><circle cx="70" cy="86" r="6" fill="#2c3e50" /><circle cx="70" cy="86" r="2" fill="#ecf0f1" /></g>
+                <rect x="28" y="82" width="4" height="4" fill="#34495e" />
+                <g className="a-wheel" style={{ transformOrigin: '30px 86px' }}><circle cx="30" cy="86" r="6" fill="#2c3e50" /><circle cx="30" cy="86" r="2" fill="#ecf0f1" /></g>
+                <g>
+                  <rect x="25" y="35" width="35" height="30" fill="#f1c40f" rx="8" />
+                  <path d="M 25 35 Q 42 15 60 35 Z" fill="#d35400" />
+                  <rect x="23" y="32" width="39" height="6" fill="#e67e22" rx="2" />
+                  <circle cx="40" cy="45" r="6" fill="#fff" /><circle cx="55" cy="45" r="6" fill="#fff" />
+                  <circle cx="42" cy="45" r="3" fill="#000" className="a-blink" /><circle cx="57" cy="45" r="3" fill="#000" className="a-blink" />
+                  <rect x="20" y="52" width="45" height="18" fill="#c0392b" rx="5" />
+                  <rect x="35" y="58" width="15" height="10" fill="#e74c3c" rx="2" /><rect x="45" y="43" width="15" height="10" fill="#c0392b" rx="4" /><rect x="55" y="44" width="8" height="8" fill="#f1c40f" rx="2" />
+                  <rect x="45" y="70" width="12" height="12" fill="#2980b9" /><rect x="45" y="78" width="18" height="6" fill="#d35400" rx="2" /><rect x="45" y="82" width="18" height="2" fill="#fff" />
+                  <g className="a-kick" style={{ transformOrigin: '31px 70px' }}>
+                    <rect x="25" y="70" width="12" height="12" fill="#2980b9" />
+                    <rect x="15" y="78" width="18" height="6" fill="#d35400" rx="2" /><rect x="15" y="82" width="18" height="2" fill="#fff" />
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+        </svg>
+
+        <svg x="150" y="550" width="220" height="220" viewBox="0 0 100 100" overflow="visible">
+          <g className="a-bounce">
+            <g className="a-tail">
+              <path d="M 30 35 Q 10 20 5 50 Q 25 55 30 40 Z" fill="#ffee58" />
+              <rect x="25" y="32" width="6" height="10" fill="#e91e63" rx="2" transform="rotate(15 25 32)" />
+            </g>
+            <path d="M 50 40 Q 50 25 35 25 Q 25 25 25 40 L 25 65 L 75 65 L 75 40 Q 75 25 60 25 Q 50 25 50 40 Z" fill="#f06292" />
+            <rect x="30" y="65" width="12" height="12" fill="#f06292" rx="2" /><rect x="58" y="65" width="12" height="12" fill="#f06292" rx="2" />
+            <path d="M 28 77 L 44 77 L 44 83 L 28 83 Z" fill="#f8bbd0" rx="2" /><path d="M 56 77 L 72 77 L 72 83 L 56 83 Z" fill="#f8bbd0" rx="2" />
+            <circle cx="38" cy="42" r="6" fill="#fff" /><circle cx="62" cy="42" r="6" fill="#fff" />
+            <circle cx="40" cy="42" r="3" fill="#000" className="a-blink" /><circle cx="64" cy="42" r="3" fill="#000" className="a-blink" />
+            <path d="M 34 38 L 30 35 M 36 36 L 33 32" stroke="#000" strokeWidth="2" strokeLinecap="round" />
+            <path d="M 66 38 L 70 35 M 64 36 L 67 32" stroke="#000" strokeWidth="2" strokeLinecap="round" />
+            <path d="M 20 50 L 30 50 L 30 65 L 20 65 Z" fill="#ab47bc" rx="2" /><path d="M 70 50 L 80 50 L 80 65 L 70 65 Z" fill="#ab47bc" rx="2" />
+            <path d="M 30 50 L 35 50 L 35 65 L 30 65 Z" fill="#81d4fa" /><path d="M 65 50 L 70 50 L 70 65 L 65 65 Z" fill="#81d4fa" />
+            <g className="a-photo">
+              <rect x="32" y="55" width="10" height="10" fill="#f06292" rx="3" /><rect x="58" y="55" width="10" height="10" fill="#f06292" rx="3" />
+              <rect x="38" y="52" width="24" height="16" fill="#424242" rx="3" /><rect x="42" y="49" width="6" height="4" fill="#212121" rx="1" />
+              <circle cx="50" cy="60" r="6" fill="#90caf9" stroke="#616161" strokeWidth="2" />
+              <circle cx="50" cy="60" r="2" fill="#fff" opacity="0.8" />
+              <circle cx="50" cy="60" r="0" fill="#fff" className="a-flash" />
+            </g>
+          </g>
+        </svg>
+        </svg>
+        </div>
 
       <AnimatePresence>
         {showAuth && (
@@ -510,6 +705,7 @@ function HomePage() {
         <div className="absolute right-[-10%] top-[-20%] w-64 h-64 bg-[#147053] rounded-full opacity-50" />
         <div className="absolute right-[20%] bottom-[-30%] w-48 h-48 bg-[#147053] rounded-full opacity-50" />
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ModeCard icon={<Camera className="text-white"/>} title="Eye Health Mode" bg="bg-[#E395A4]" cardBg={cardBg}
           desc="AI detects blink rates and screen distance to prevent digital eye strain."
@@ -538,374 +734,120 @@ function ModeCard({ title, desc, icon, bg, cardBg, tags, onClick }) {
 }
 
 // ==========================================
-// 12. Live Monitor Page  ← FULLY WIRED
+// 12. Live Monitor Page
 // ==========================================
 function LivePage() {
   const navigate = useNavigate();
   const { user } = React.useContext(UserContext);
   const mode = localStorage.getItem('eyeguard_mode') || 'eye_health';
+  const [sessionTime, setSessionTime] = useState(0);
+  const [totalBlinks, setTotalBlinks] = useState(0);
+  const [drowsyCount, setDrowsyCount] = useState(0);
+  const [focusPercent, setFocusPercent] = useState(100);
+  const [geminiTip, setGeminiTip] = useState('');
+  const [data, setData] = useState({ bpm: 15, ear: 0.35, too_close: false, too_far: false, drowsy: false });
+  const videoRef = React.useRef(null);
+  const canvasRef = React.useRef(null);
+  const wsRef = React.useRef(null);
+  const intervalRef = React.useRef(null);
 
-  // ── UI state ──────────────────────────────────────────────────────────────
-  const [sessionTime, setSessionTime]   = useState(0);
-  const [totalBlinks, setTotalBlinks]   = useState(0);
-  const [drowsyCount, setDrowsyCount]   = useState(0);
-  const [banner, setBanner]             = useState(null);
-  const [sessionId, setSessionId]       = useState(null);
-  const [camDenied, setCamDenied]       = useState(false);
-  const [modelReady, setModelReady]     = useState(false);
-
-  // ── Live metrics (updated every animation frame) ───────────────────────
-  const [ear, setEar]         = useState(0);
-  const [bpm, setBpm]         = useState(0);
-  const [tooClose, setTooClose] = useState(false);
-  const [tooFar, setTooFar]     = useState(false);
-  const [drowsy, setDrowsy]     = useState(false);
-
-  // ── Refs ──────────────────────────────────────────────────────────────────
-  const videoRef  = useRef(null);
-  const canvasRef = useRef(null);
-  const faceRef   = useRef(null);   // FaceLandmarker instance
-  const rafRef    = useRef(null);   // requestAnimationFrame id
-
-  // Blink state machine
-  const blinkRef = useRef({
-    closed: false,
-    closeStart: 0,
-    lastBlinkTs: 0,
-    blinks: [],         // timestamps of blinks in last 60s
-  });
-
-  // AI cooldown — fire Gemini tip at most once per minute
-  const aiRef = useRef({ lastTs: 0 });
-
-  // ── Audio beep helper ────────────────────────────────────────────────────
-  function beep() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.frequency.value = 880; g.gain.value = 0.08;
-      o.start();
-      setTimeout(() => { o.stop(); ctx.close(); }, 180);
-    } catch {}
-  }
-
-  // ── Notification banner helper ───────────────────────────────────────────
-  function notify(text, { sound = true, vibrate = true } = {}) {
-    setBanner(text);
-    if (sound) beep();
-    if (vibrate && 'vibrate' in navigator) navigator.vibrate([120, 80, 120]);
-    setTimeout(() => setBanner(null), 6000);
-  }
-
-  // ── Gemini AI tip trigger ────────────────────────────────────────────────
-  async function maybeAI({ bpm: _bpm, too_close, too_far, drowsy: _drowsy }) {
-    const now = Date.now();
-    if (now - aiRef.current.lastTs < 60_000) return; // 1-min cooldown
-
-    let should = false;
-    if (mode === 'eye_health')    should = _bpm < 10 || too_close || too_far || _drowsy;
-    if (mode === 'productivity')  should = _drowsy || _bpm < 7;
-    if (!should) return;
-
-    aiRef.current.lastTs = now;
-    try {
-      const { tip } = await getTip({ bpm: _bpm, too_close, too_far, drowsy: _drowsy, mode });
-      notify(tip, { sound: true, vibrate: true });
-    } catch {
-      notify('Take a 20-second break and blink slowly a few times.', { sound: true });
-    }
-  }
-
-  // ── Session timer ────────────────────────────────────────────────────────
   useEffect(() => {
     const timer = setInterval(() => setSessionTime(s => s + 1), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // ── Start backend session on mount ───────────────────────────────────────
-  useEffect(() => {
-    startSession(mode).then(id => setSessionId(id));
-  }, []);
-
-  // ── End backend session on unmount ───────────────────────────────────────
-  useEffect(() => {
-    return () => {
-      if (sessionId) endSession(sessionId);
-    };
-  }, [sessionId]);
-
-  // ── Send periodic events to backend ──────────────────────────────────────
-  useEffect(() => {
-    if (!sessionId) return;
-    const iv = setInterval(() => {
-      sendEvent(sessionId, {
-        event_type: 'metrics',
-        data: { bpm, ear, too_close: tooClose, too_far: tooFar, drowsy },
-      });
-    }, 10_000); // every 10 s
-    return () => clearInterval(iv);
-  }, [sessionId, bpm, ear, tooClose, tooFar, drowsy]);
-
-  // ── Camera + MediaPipe main loop ──────────────────────────────────────────
   useEffect(() => {
     let stream = null;
-    let cancelled = false;
-
-    const run = async () => {
-      // 1. Request camera
+    const startCamera = async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      } catch {
-        setCamDenied(true);
-        return;
+        if (videoRef.current) videoRef.current.srcObject = stream;
+        startSimulation();
+      } catch (err) {
+        startSimulation();
       }
-
-      if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
-
-      videoRef.current.srcObject = stream;
-      await videoRef.current.play();
-
-      // 2. Load MediaPipe FaceLandmarker
-      if (!faceRef.current) {
-        faceRef.current = await createBlinkDetector();
-      }
-      setModelReady(true);
-
-      const landmarker = faceRef.current;
-
-      // 3. Per-frame inference loop
-      const tick = () => {
-        if (cancelled) return;
-
-        const video = videoRef.current;
-        if (!video || video.readyState < 2) {
-          rafRef.current = requestAnimationFrame(tick);
-          return;
-        }
-
-        const t = performance.now();
-        const res = landmarker.detectForVideo(video, t);
-
-        if (res?.faceLandmarks?.length) {
-          const lm = res.faceLandmarks[0];
-
-          // ── EAR (eye-aspect-ratio) ──────────────────────────────────────
-          const { ear: earVal } = computeBlinkMetrics(lm);
-          setEar(earVal);
-
-          // ── Distance alert ──────────────────────────────────────────────
-          const { too_close, too_far } = computeDistanceAlert(lm);
-          setTooClose(too_close);
-          setTooFar(too_far);
-
-          // ── Blink state machine ─────────────────────────────────────────
-          const THRESH       = 0.23;  // EAR below → eye closed
-          const MIN_CLOSE_MS = 80;    // must stay closed this long to count
-          const MIN_GAP_MS   = 200;   // min gap between blinks
-          const DROWSY_MS    = 1500;  // eyes closed > this → drowsy
-
-          const st = blinkRef.current;
-          const now = Date.now();
-
-          if (earVal < THRESH) {
-            if (!st.closed) {
-              st.closed = true;
-              st.closeStart = now;
-            }
-            // Drowsiness check
-            const isDrowsy = (now - st.closeStart) > DROWSY_MS;
-            setDrowsy(isDrowsy);
-            if (isDrowsy) setDrowsyCount(c => c + 1);
-          } else {
-            if (st.closed) {
-              const closeDur = now - st.closeStart;
-              const gap      = now - st.lastBlinkTs;
-              if (closeDur >= MIN_CLOSE_MS && gap >= MIN_GAP_MS) {
-                st.lastBlinkTs = now;
-                st.blinks.push(now);
-                // Keep only blinks in the last 60 s
-                st.blinks = st.blinks.filter(x => now - x <= 60_000);
-                const newBpm = st.blinks.length;
-                setBpm(newBpm);
-                setTotalBlinks(c => c + 1);
-              }
-              setDrowsy(false);
-            }
-            st.closed = false;
-          }
-
-          // ── Distance banner ─────────────────────────────────────────────
-          if (too_close) notify('📏 Too close! Back up from your screen.', { sound: false, vibrate: false });
-
-          // ── Gemini AI tip (rate-limited) ───────────────────────────────
-          maybeAI({ bpm, too_close, too_far, drowsy: (now - st.closeStart) > DROWSY_MS && st.closed });
-        }
-
-        rafRef.current = requestAnimationFrame(tick);
-      };
-
-      rafRef.current = requestAnimationFrame(tick);
     };
 
-    run();
+    const startSimulation = () => {
+      intervalRef.current = setInterval(() => {
+        const isDrowsy = Math.random() > 0.9;
+        setTotalBlinks(b => b + Math.floor(Math.random() * 3));
+        if (isDrowsy) setDrowsyCount(c => c + 1);
+        setFocusPercent(p => Math.max(0, p - (isDrowsy ? 2 : 0)));
+        setData({
+          bpm: Math.floor(Math.random() * 5) + 12,
+          ear: 0.2 + Math.random() * 0.2,
+          too_close: Math.random() > 0.85,
+          too_far: Math.random() > 0.9,
+          drowsy: isDrowsy
+        });
+      }, 2000);
+    };
 
+    startCamera();
     return () => {
-      cancelled = true;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      clearInterval(intervalRef.current);
       if (stream) stream.getTracks().forEach(t => t.stop());
     };
-  }, []);
+  }, [mode]);
 
   const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
-
-  const handleEndSession = () => {
-    if (sessionId) endSession(sessionId);
-    navigate('/home');
-  };
-
-  // ── Distance label ────────────────────────────────────────────────────────
-  const distLabel = tooClose ? 'TOO CLOSE' : tooFar ? 'TOO FAR' : 'GOOD DISTANCE';
-  const distColor = tooClose ? 'text-red-400' : tooFar ? 'text-amber-400' : 'text-[#7A9B76]';
-  const mascotAlert = tooClose || drowsy;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen bg-[#111] text-white p-8 pb-16">
       <canvas ref={canvasRef} className="hidden" />
-
-      {/* ── Notification Banner ── */}
-      <AnimatePresence>
-        {banner && (
-          <motion.div
-            initial={{ y: -80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -80, opacity: 0 }}
-            className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] bg-[#E58C49] text-white px-8 py-4 rounded-2xl font-bold shadow-2xl max-w-lg text-center text-sm leading-snug"
-          >
-            {banner}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Camera denied warning ── */}
-      {camDenied && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
-          <div className="bg-[#1a1a1a] border border-red-500/30 rounded-[32px] p-10 max-w-sm text-center">
-            <Camera size={48} className="text-red-400 mx-auto mb-4" />
-            <h3 className="text-xl font-black mb-2 text-red-400">Camera Access Denied</h3>
-            <p className="text-white/60 mb-6 text-sm">Please allow camera access in your browser settings and refresh the page.</p>
-            <button onClick={() => navigate('/home')} className="bg-white/10 text-white px-6 py-3 rounded-xl font-bold">← Go Back</button>
-          </div>
-        </div>
-      )}
-
       <header className="flex items-center justify-between mb-8 max-w-7xl mx-auto">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-[#7A9B76]/20 text-[#7A9B76] px-4 py-2 rounded-full font-bold text-sm">
-            <div className="w-2 h-2 bg-[#7A9B76] rounded-full animate-pulse" />
-            {mode === 'eye_health' ? 'Health AI Active' : 'Focus AI Active'}
-          </div>
-          {!modelReady && (
-            <div className="text-white/40 text-xs font-bold animate-pulse">Loading model…</div>
-          )}
+        <div className="flex items-center gap-2 bg-[#7A9B76]/20 text-[#7A9B76] px-4 py-2 rounded-full font-bold text-sm">
+          <div className="w-2 h-2 bg-[#7A9B76] rounded-full animate-pulse" /> {mode === 'eye_health' ? 'Health AI Active' : 'Focus AI Active'}
         </div>
-        <button onClick={handleEndSession} className="bg-white/10 hover:bg-[#E395A4] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-colors">End Session & Back</button>
+        <button onClick={() => navigate('/home')} className="bg-white/10 hover:bg-[#E395A4] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-colors">End Session & Back</button>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-7xl mx-auto h-[75vh]">
-        {/* ── Left: camera feed + EAR bar ── */}
         <div className="lg:col-span-8 flex flex-col gap-6 h-full">
           <div className="bg-black rounded-[40px] flex-1 relative overflow-hidden border border-white/10 shadow-2xl flex items-center justify-center">
             <video ref={videoRef} autoPlay muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-80 rounded-[40px]" />
-            {!modelReady && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Camera size={64} className="text-white/20" />
-              </div>
-            )}
+            {!videoRef.current?.srcObject && <Camera size={64} className="text-white/20" />}
             <div className="animate-solid-scan" />
-            {/* Face guide box */}
             <div className="absolute w-48 h-64 border-2 border-dashed border-[#7A9B76]/50 rounded-3xl" />
-            {/* CAM ON badge */}
             <div className="absolute top-6 right-6 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg border border-white/10">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
               <span className="text-xs font-bold text-white tracking-wider">CAM ON</span>
             </div>
-            {/* Distance badge */}
             <div className="absolute bottom-6 left-6 flex items-center gap-2 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-white/10">
-              <Target size={16} className={distColor} />
-              <span className={`text-xs font-bold tracking-wider ${distColor}`}>{distLabel}</span>
+              <Target size={16} className={data.too_close ? 'text-red-400' : data.too_far ? 'text-amber-400' : 'text-[#7A9B76]'} />
+              <span className="text-xs font-bold text-white tracking-wider">{data.too_close ? 'TOO CLOSE' : data.too_far ? 'TOO FAR' : 'GOOD DISTANCE'}</span>
             </div>
-            {/* Drowsy badge */}
-            {drowsy && (
-              <div className="absolute top-6 left-6 flex items-center gap-2 bg-[#E58C49]/80 backdrop-blur-md px-4 py-2 rounded-full shadow-lg">
-                <span className="text-xs font-black text-white tracking-wider">😴 DROWSY DETECTED</span>
-              </div>
-            )}
           </div>
 
-          {/* EAR progress bar */}
           <div className="bg-white/5 rounded-[32px] p-6 border border-white/10">
             <div className="flex justify-between text-sm font-bold uppercase tracking-widest text-white/50 mb-3">
-              <span>Eye Openness (EAR)</span>
-              <span className="text-[#E58C49]">{ear.toFixed(3)}</span>
+              <span>Eye Openness (EAR)</span><span className="text-[#E58C49]">{data.ear.toFixed(2)}</span>
             </div>
             <div className="h-4 bg-black/50 rounded-full overflow-hidden relative">
-              <motion.div
-                className={`absolute top-0 left-0 h-full rounded-full transition-colors ${ear < 0.23 ? 'bg-[#E395A4]' : 'bg-[#E58C49]'}`}
-                animate={{ width: `${Math.min(ear * 250, 100)}%` }}
-                transition={{ duration: 0.1 }}
-              />
-              {/* Threshold marker at EAR=0.23 → 23/100*250 = 57.5% */}
-              <div className="absolute top-0 bottom-0 left-[57.5%] w-0.5 bg-white/30" title="Blink threshold" />
+              <motion.div className={`absolute top-0 left-0 h-full rounded-full ${data.ear < 0.25 ? 'bg-[#E395A4]' : 'bg-[#E58C49]'}`} animate={{ width: `${Math.min(data.ear * 200, 100)}%` }} />
+              <div className="absolute top-0 bottom-0 left-[50%] w-0.5 bg-white/20" />
             </div>
-            <p className="text-white/30 text-xs mt-2">Dashed line = blink threshold (EAR 0.23)</p>
           </div>
         </div>
 
-        {/* ── Right: mascot + stats ── */}
         <div className="lg:col-span-4 flex flex-col gap-6 h-full">
-          <div className={`rounded-[40px] p-8 border text-center flex-1 flex flex-col items-center justify-center transition-colors ${mascotAlert ? 'bg-[#E395A4]/10 border-[#E395A4]/50' : 'bg-white/5 border-white/10'}`}>
-            <PixelMascot skin={user?.mascot} size={200} alertState={mascotAlert} />
+          <div className={`rounded-[40px] p-8 border text-center flex-1 flex flex-col items-center justify-center transition-colors ${data.too_close ? 'bg-[#E395A4]/10 border-[#E395A4]/50' : 'bg-white/5 border-white/10'}`}>
+            <PixelMascot skin={user?.mascot} size={200} alertState={data.too_close || data.drowsy} />
             <div className="mt-8 h-20">
-              {tooClose
-                ? <><h4 className="text-[#E395A4] font-bold text-xl">Too Close!</h4><p className="text-white/50 text-sm mt-1">Back up from the screen</p></>
-                : drowsy
-                ? <><h4 className="text-[#E58C49] font-bold text-xl">Sleepy spotted!</h4><p className="text-white/50 text-sm mt-1">Wake up, you've got this!</p></>
-                : tooFar
-                ? <><h4 className="text-amber-400 font-bold text-xl">Too Far!</h4><p className="text-white/50 text-sm mt-1">Move closer to the screen</p></>
-                : <><h4 className="text-[#7A9B76] font-bold text-xl">Looking Good!</h4><p className="text-white/50 text-sm mt-1">Keep it up 👀</p></>
-              }
+              {data.too_close ? <><h4 className="text-[#E395A4] font-bold text-xl">Too Close!</h4><p className="text-white/50 text-sm mt-1">Give me space</p></>
+                : data.drowsy ? <><h4 className="text-[#E58C49] font-bold text-xl">Sleepy spotted.</h4><p className="text-white/50 text-sm mt-1">Recharge now.</p></>
+                : <><h4 className="text-[#7A9B76] font-bold text-xl">Looking Good!</h4><p className="text-white/50 text-sm mt-1">Keep it up.</p></>}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
-              <p className="text-white/50 text-[10px] font-bold uppercase mb-2 tracking-wider">Session Time</p>
-              <p className="text-3xl font-black text-white">{formatTime(sessionTime)}</p>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
-              <p className="text-white/50 text-[10px] font-bold uppercase mb-2 tracking-wider">Total Blinks</p>
-              <p className="text-3xl font-black text-white">{totalBlinks}</p>
-            </div>
+            <div className="bg-white/5 border border-white/10 rounded-3xl p-6"><p className="text-white/50 text-[10px] font-bold uppercase mb-2 tracking-wider">Session Time</p><p className="text-3xl font-black text-white">{formatTime(sessionTime)}</p></div>
+            <div className="bg-white/5 border border-white/10 rounded-3xl p-6"><p className="text-white/50 text-[10px] font-bold uppercase mb-2 tracking-wider">Total Blinks</p><p className="text-3xl font-black text-white">{totalBlinks}</p></div>
             <div className="bg-white/5 border border-white/10 rounded-3xl p-6 col-span-2 flex justify-between items-center">
-              <div>
-                <p className="text-white/50 text-[10px] font-bold uppercase mb-2 tracking-wider">Blink Rate</p>
-                <p className="text-3xl font-black text-[#E58C49]">
-                  {bpm} <span className="text-sm text-white/50">BPM</span>
-                </p>
-                <p className="text-white/30 text-xs mt-1">
-                  {bpm < 10 ? '⚠️ Low — blink more!' : bpm < 15 ? '😐 Below average' : '✅ Healthy range'}
-                </p>
-              </div>
+              <div><p className="text-white/50 text-[10px] font-bold uppercase mb-2 tracking-wider">Blink Rate</p><p className="text-3xl font-black text-[#E58C49]">{data.bpm} <span className="text-sm text-white/50">BPM</span></p></div>
               <Activity className="text-[#E58C49] opacity-50" size={32} />
             </div>
-            {drowsyCount > 0 && (
-              <div className="bg-[#E58C49]/10 border border-[#E58C49]/30 rounded-3xl p-6 col-span-2">
-                <p className="text-[#E58C49] text-[10px] font-bold uppercase mb-1 tracking-wider">Drowsy Events</p>
-                <p className="text-2xl font-black text-[#E58C49]">{drowsyCount}</p>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -944,6 +886,7 @@ function TimerPage() {
   const total = isBreak ? breakMins * 60 : workMins * 60;
   const progress = total > 0 ? ((total - timeLeft) / total) * 100 : 0;
   const cardBg = isDark ? 'bg-[#1D2B26] border-[#3D6055]' : 'bg-[#FCF9F2] border-[#E2E8F0]';
+  const textColor = isDark ? 'text-white' : 'text-[#3D4035]';
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen flex flex-col items-center justify-center pt-20 pb-10 relative">
@@ -952,7 +895,7 @@ function TimerPage() {
       <div className="w-full flex flex-col items-center mt-16 px-6 mx-auto">
         <div className="relative mt-24 flex justify-center w-full max-w-lg">
           <div className="absolute -top-[145px] z-0"><PixelMascot skin={user?.mascot} size={180} /></div>
-          <div className={`relative z-10 ${cardBg} ${isDark ? 'text-white' : 'text-[#3D4035]'} rounded-[40px] p-12 w-full shadow-2xl border`}>
+          <div className={`relative z-10 ${cardBg} ${textColor} rounded-[40px] p-12 w-full shadow-2xl border`}>
             <div className="flex justify-between items-start mb-10 min-h-[100px]">
               {!isEditing ? (
                 <div className="flex gap-8 w-full justify-between" onClick={() => !isRunning && setIsEditing(true)}>
@@ -1185,29 +1128,42 @@ function DashboardPage() {
         <div className={`lg:col-span-4 ${cardBg} rounded-[32px] p-8 shadow-sm border flex-1`}>
            <h4 className="font-bold text-lg mb-6 flex items-center gap-2"><History size={20} /> Recent History</h4>
            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-black/10 before:to-transparent">
+             
              <div className="relative flex items-center justify-between">
                <div className="flex items-center gap-4">
                  <div className="w-5 h-5 rounded-full bg-[#E2F0CB] border-2 border-[#7A9B76] z-10" />
-                 <div><p className="font-bold text-sm">20-20-20 Rule</p><p className="text-xs opacity-60">Completed full session</p></div>
+                 <div>
+                   <p className="font-bold text-sm">20-20-20 Rule</p>
+                   <p className="text-xs opacity-60">Completed full session</p>
+                 </div>
                </div>
                <span className="text-xs font-bold opacity-40">2h ago</span>
              </div>
+             
              <div className="relative flex items-center justify-between">
                <div className="flex items-center gap-4">
                  <div className="w-5 h-5 rounded-full bg-[#FFF0E5] border-2 border-[#E58C49] z-10" />
-                 <div><p className="font-bold text-sm">Warm Palming</p><p className="text-xs opacity-60">Streak: 3 Days</p></div>
+                 <div>
+                   <p className="font-bold text-sm">Warm Palming</p>
+                   <p className="text-xs opacity-60">Streak: 3 Days</p>
+                 </div>
                </div>
                <span className="text-xs font-bold opacity-40">5h ago</span>
              </div>
+             
              <div className="relative flex items-center justify-between">
                <div className="flex items-center gap-4">
                  <div className="w-5 h-5 rounded-full bg-[#FCE1E4] border-2 border-[#E395A4] z-10" />
-                 <div><p className="font-bold text-sm">Eye Health Mode</p><p className="text-xs opacity-60">45 mins tracking</p></div>
+                 <div>
+                   <p className="font-bold text-sm">Eye Health Mode</p>
+                   <p className="text-xs opacity-60">45 mins tracking</p>
+                 </div>
                </div>
                <span className="text-xs font-bold opacity-40">Yesterday</span>
              </div>
            </div>
         </div>
+
       </div>
     </motion.div>
   );
@@ -1222,8 +1178,12 @@ function SettingsPage() {
     const isDark = user?.theme === 'dark';
     const [dnd, setDnd] = useState(false);
     const [notifs, setNotifs] = useState(['banner', 'sound']);
-    const toggleNotif = (key) => setNotifs(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key]);
-    const cardBg = isDark ? 'bg-[#1D2B26] border-[#3D6055] text-white' : 'bg-[#FCF9F2] border-white text-[#3D4035]';
+    const toggleNotif = (key) => {
+    setNotifs((prev) =>
+        prev.includes(key)
+        ? prev.filter((x) => x !== key)
+        : [...prev, key]);};
+  const cardBg = isDark ? 'bg-[#1D2B26] border-[#3D6055] text-white' : 'bg-[#FCF9F2] border-white text-[#3D4035]';
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="pt-32 pb-20 px-8 max-w-4xl mx-auto">
@@ -1242,28 +1202,57 @@ function SettingsPage() {
 
         <section className={`${cardBg} rounded-[40px] p-8 shadow-sm border`}>
           <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Volume2 className="text-[#E58C49]" /> Notifications & Sound</h3>
+          
           <div className="flex items-center justify-between py-6 border-b border-black/10">
-            <div><p className="font-bold text-lg">Do Not Disturb</p><p className="text-sm opacity-60 font-medium">Silence all alerts from Mascot.</p></div>
+            <div>
+              <p className="font-bold text-lg">Do Not Disturb</p>
+              <p className="text-sm opacity-60 font-medium">Silence all alerts from Mascot.</p>
+            </div>
             <div onClick={() => setDnd(!dnd)} className={`w-14 h-8 rounded-full p-1 cursor-pointer transition-colors shadow-inner ${dnd ? 'bg-[#7A9B76]' : 'bg-black/20'}`}>
               <motion.div animate={{ x: dnd ? 24 : 0 }} className="w-6 h-6 bg-white rounded-full shadow-md" />
             </div>
           </div>
+
           <div className="py-6">
             <p className="font-bold text-lg mb-4">Notification Preferences</p>
+
             <div className="flex flex-col gap-4">
-              {[{ label: 'Banner Pop-up', key: 'banner' }, { label: 'Sound Chime', key: 'sound' }, { label: 'Vibration', key: 'vibration' }].map(({ label, key }) => {
+            {[
+                { label: 'Banner Pop-up', key: 'banner' },
+                { label: 'Sound Chime', key: 'sound' },
+                { label: 'Vibration', key: 'vibration' },
+            ].map(({ label, key }) => {
                 const isChecked = notifs.includes(key);
+
                 return (
-                  <label key={key} className="flex items-center gap-4 cursor-pointer group w-fit" onClick={e => { e.preventDefault(); toggleNotif(key); }}>
-                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${isChecked ? 'bg-[#7A9B76] border-[#7A9B76]' : 'border-black/20 group-hover:border-[#7A9B76]/50'}`}>
-                      {isChecked && <CheckCircle2 size={16} className="text-white" />}
+                <label
+                    key={key}
+                    className="flex items-center gap-4 cursor-pointer group w-fit"
+                    onClick={(e) => {
+                    e.preventDefault();
+                    toggleNotif(key);
+                    }}
+                >
+                    <div
+                    className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${
+                        isChecked
+                        ? 'bg-[#7A9B76] border-[#7A9B76]'
+                        : 'border-black/20 group-hover:border-[#7A9B76]/50'
+                    }`}
+                    >
+                    {isChecked && (
+                        <CheckCircle2 size={16} className="text-white" />
+                    )}
                     </div>
-                    <span className="font-bold opacity-80 group-hover:opacity-100">{label}</span>
-                  </label>
+
+                    <span className="font-bold opacity-80 group-hover:opacity-100">
+                    {label}
+                    </span>
+                </label>
                 );
-              })}
+            })}
             </div>
-          </div>
+        </div>
         </section>
 
         <section className={`${cardBg} rounded-[40px] p-8 shadow-sm border`}>
@@ -1374,9 +1363,9 @@ export default function App() {
 
   return (
     <UserContext.Provider value={{ user, setUser }}>
-      <AppShell>
+    <AppShell>
         <AnimatePresence mode="wait">
-          <Routes>
+        <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LandingPage />} />
             <Route path="/onboarding" element={<OnboardingPage />} />
@@ -1388,9 +1377,12 @@ export default function App() {
             <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
             <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+        </Routes>
         </AnimatePresence>
-      </AppShell>
+    </AppShell>
     </UserContext.Provider>
   );
 }
+
+
+

@@ -1,12 +1,19 @@
 import random
+import time
 
 
-def sample_metrics():
-    is_drowsy = random.random() > 0.9
+def sample_metrics() -> dict:
+    """
+    Returns simulated eye-tracking metrics.
+    Used by the /ws/live WebSocket endpoint when no real camera data is available.
+    """
+    bpm = random.randint(8, 20)
+    ear = round(random.uniform(0.20, 0.42), 3)
     return {
-        "bpm": random.randint(12, 18),
-        "ear": round(random.uniform(0.20, 0.40), 2),
-        "too_close": random.random() > 0.85,
-        "too_far": random.random() > 0.90,
-        "drowsy": is_drowsy,
+        "bpm": bpm,
+        "ear": ear,
+        "too_close": random.random() < 0.08,
+        "too_far": random.random() < 0.05,
+        "drowsy": random.random() < 0.05,
+        "ts": round(time.time(), 3),
     }

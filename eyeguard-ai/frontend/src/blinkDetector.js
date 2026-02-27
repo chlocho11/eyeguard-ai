@@ -53,3 +53,27 @@ export function computeBlinkMetrics(faceLandmarks) {
   const avg = (left + right) / 2;
   return { leftEAR: left, rightEAR: right, ear: avg };
 }
+
+// Estimate screen distance using face width in normalized coords.
+// Landmarks 234 (left cheek) and 454 (right cheek) span the face.
+// Larger faceWidth → user is closer to the camera.
+// Tune TOO_CLOSE_THRESH and TOO_FAR_THRESH to your webcam setup.
+export function computeDistanceAlert(faceLandmarks) {
+  const leftCheek  = faceLandmarks[234];
+  const rightCheek = faceLandmarks[454];
+
+  if (!leftCheek || !rightCheek) return { too_close: false, too_far: false };
+
+  const faceWidth = Math.hypot(
+    rightCheek.x - leftCheek.x,
+    rightCheek.y - leftCheek.y
+  );
+
+  // Empirical thresholds in normalised [0,1] coords.
+  // faceWidth > 0.45  → face fills frame → too close
+  // faceWidth < 0.18  → face is tiny    → too far
+  const too_close = faceWidth > 0.45;
+  const too_far   = faceWidth < 0.18;
+
+  return { too_close, too_far, faceWidth };
+}
