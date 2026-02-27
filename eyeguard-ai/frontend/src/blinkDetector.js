@@ -72,8 +72,8 @@ export function computeDistanceAlert(faceLandmarks) {
   // Empirical thresholds in normalised [0,1] coords.
   // faceWidth > 0.45  → face fills frame → too close
   // faceWidth < 0.18  → face is tiny    → too far
-  const too_close = faceWidth > 0.45;
-  const too_far   = faceWidth < 0.18;
+  const too_close = faceWidth > 0.55;
+  const too_far   = faceWidth < 0.13;
 
   return { too_close, too_far, faceWidth };
 }

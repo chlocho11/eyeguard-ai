@@ -335,7 +335,8 @@ function LandingPage() {
           Protect Your Eyes,<br /><span className="text-yellow-300">Boost Your Focus.</span>
         </motion.h1>
         <motion.p initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-xl text-white/80 font-medium max-w-xl mb-10">
-          Real-time blink detection, drowsiness alerts, and AI-powered coaching to keep your eyes healthy during long work sessions.
+          Your intelligent health assistant. Using real-time computer vision to conduct real-time blink detection, drowsiness alerts, and AI-powered coaching to keep your eyes healthy during long work sessions. EyeGuard prevents digital burnout!!!
+
         </motion.p>
         <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="flex gap-4 flex-wrap justify-center">
           <button onClick={() => setShowAuth(true)} className="bg-white text-[#0f926e] px-8 py-4 rounded-2xl font-black text-lg hover:bg-yellow-50 transition-all shadow-xl">Start for Free</button>
@@ -343,17 +344,46 @@ function LandingPage() {
         </motion.div>
       </div>
 
-      <div ref={infoRef} className="relative z-10 w-full max-w-6xl mx-auto px-6 pb-20 grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+      {/* ── Animated mascot parade ── */}
+      <div ref={infoRef} className="relative z-10 w-full max-w-5xl mx-auto px-6 pt-6 pb-2">
+        <motion.p
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+          className="text-center text-white/60 text-sm font-bold uppercase tracking-widest mb-8"
+        >
+        </motion.p>
+        <div className="flex items-end justify-center gap-2 flex-wrap">
+          {MASCOT_KEYS.map((skin, i) => (
+            <motion.div
+              key={skin}
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 + i * 0.07, type: 'spring', bounce: 0.4 }}
+              whileHover={{ y: -12, scale: 1.1 }}
+              className="cursor-pointer"
+              title={skin}
+            >
+              <PixelMascot skin={skin} size={90} />
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Feature cards ── */}
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 pb-20 grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
         {[
           { icon: '👁️', title: 'Blink Rate Monitor', desc: 'MediaPipe AI tracks your blink rate in real-time and alerts you when you stop blinking enough.' },
-          { icon: '📏', title: 'Distance Detection', desc: 'Warns you when youre too close or too far from your screen to prevent strain.' },
+          { icon: '📏', title: 'Distance Detection', desc: 'Warns you when you are too close or too far from your screen to prevent strain.' },
           { icon: '🤖', title: 'Gemini AI Coach', desc: 'Get personalised, witty tips from Gemini AI — a Duolingo-style coach for your eyes.' },
         ].map(f => (
-          <div key={f.title} className="bg-white/10 border border-white/20 backdrop-blur-sm rounded-[28px] p-8 text-white">
+          <motion.div
+            key={f.title}
+            initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.8 }}
+            className="bg-white/10 border border-white/20 backdrop-blur-sm rounded-[28px] p-8 text-white hover:bg-white/15 transition-colors"
+          >
             <div className="text-4xl mb-4">{f.icon}</div>
             <h3 className="font-black text-xl mb-2">{f.title}</h3>
             <p className="text-white/70 font-medium">{f.desc}</p>
-          </div>
+          </motion.div>
         ))}
       </div>
 
@@ -577,6 +607,11 @@ function LivePage() {
 
   // AI cooldown — fire Gemini tip at most once per minute
   const aiRef = useRef({ lastTs: 0 });
+  // Live refs so the RAF loop always reads current values (avoids stale closures)
+  const bpmRef      = useRef(0);
+  const tooCloseRef = useRef(false);
+  const tooFarRef   = useRef(false);
+  const drowsyRef   = useRef(false);
 
   // ── Audio beep helper ────────────────────────────────────────────────────
   function beep() {
@@ -599,14 +634,19 @@ function LivePage() {
     setTimeout(() => setBanner(null), 6000);
   }
 
-  // ── Gemini AI tip trigger ────────────────────────────────────────────────
-  async function maybeAI({ bpm: _bpm, too_close, too_far, drowsy: _drowsy }) {
+  // ── Gemini AI tip trigger — reads from refs so it's never stale ────────
+  async function maybeAI() {
     const now = Date.now();
     if (now - aiRef.current.lastTs < 60_000) return; // 1-min cooldown
 
+    const _bpm      = bpmRef.current;
+    const too_close = tooCloseRef.current;
+    const too_far   = tooFarRef.current;
+    const _drowsy   = drowsyRef.current;
+
     let should = false;
-    if (mode === 'eye_health')    should = _bpm < 10 || too_close || too_far || _drowsy;
-    if (mode === 'productivity')  should = _drowsy || _bpm < 7;
+    if (mode === 'eye_health')   should = _bpm < 10 || too_close || too_far || _drowsy;
+    if (mode === 'productivity') should = _drowsy || _bpm < 7;
     if (!should) return;
 
     aiRef.current.lastTs = now;
@@ -699,6 +739,8 @@ function LivePage() {
           const { too_close, too_far } = computeDistanceAlert(lm);
           setTooClose(too_close);
           setTooFar(too_far);
+          tooCloseRef.current = too_close;
+          tooFarRef.current   = too_far;
 
           // ── Blink state machine ─────────────────────────────────────────
           const THRESH       = 0.23;  // EAR below → eye closed
@@ -717,6 +759,7 @@ function LivePage() {
             // Drowsiness check
             const isDrowsy = (now - st.closeStart) > DROWSY_MS;
             setDrowsy(isDrowsy);
+            drowsyRef.current = isDrowsy;
             if (isDrowsy) setDrowsyCount(c => c + 1);
           } else {
             if (st.closed) {
@@ -729,9 +772,11 @@ function LivePage() {
                 st.blinks = st.blinks.filter(x => now - x <= 60_000);
                 const newBpm = st.blinks.length;
                 setBpm(newBpm);
+                bpmRef.current = newBpm;
                 setTotalBlinks(c => c + 1);
               }
               setDrowsy(false);
+              drowsyRef.current = false;
             }
             st.closed = false;
           }
@@ -739,8 +784,8 @@ function LivePage() {
           // ── Distance banner ─────────────────────────────────────────────
           if (too_close) notify('📏 Too close! Back up from your screen.', { sound: false, vibrate: false });
 
-          // ── Gemini AI tip (rate-limited) ───────────────────────────────
-          maybeAI({ bpm, too_close, too_far, drowsy: (now - st.closeStart) > DROWSY_MS && st.closed });
+          // ── Gemini AI tip (rate-limited, reads fresh refs) ────────
+          maybeAI();
         }
 
         rafRef.current = requestAnimationFrame(tick);
