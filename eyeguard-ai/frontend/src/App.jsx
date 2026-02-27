@@ -327,7 +327,7 @@ function LandingPage() {
         </div>
       </header>
 
-      <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 pt-20 pb-10 min-h-[70vh]">
+      <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 pt-10 pb-4 min-h-[30vh]">
         <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="mb-6">
           <span className="bg-white/20 text-white text-sm font-bold px-4 py-2 rounded-full border border-white/30">✨ AI-Powered Eye Health for Everyone</span>
         </motion.div>
@@ -335,8 +335,7 @@ function LandingPage() {
           Protect Your Eyes,<br /><span className="text-yellow-300">Boost Your Focus.</span>
         </motion.h1>
         <motion.p initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-xl text-white/80 font-medium max-w-xl mb-10">
-          Your intelligent health assistant. Using real-time computer vision to conduct real-time blink detection, drowsiness alerts, and AI-powered coaching to keep your eyes healthy during long work sessions. EyeGuard prevents digital burnout!!!
-
+          Real-time blink detection, drowsiness alerts, and AI-powered coaching to keep your eyes healthy during long work sessions.
         </motion.p>
         <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="flex gap-4 flex-wrap justify-center">
           <button onClick={() => setShowAuth(true)} className="bg-white text-[#0f926e] px-8 py-4 rounded-2xl font-black text-lg hover:bg-yellow-50 transition-all shadow-xl">Start for Free</button>
@@ -344,32 +343,220 @@ function LandingPage() {
         </motion.div>
       </div>
 
-      {/* ── Animated mascot parade ── */}
-      <div ref={infoRef} className="relative z-10 w-full max-w-5xl mx-auto px-6 pt-6 pb-2">
-        <motion.p
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-          className="text-center text-white/60 text-sm font-bold uppercase tracking-widest mb-8"
-        >
-        </motion.p>
-        <div className="flex items-end justify-center gap-2 flex-wrap">
-          {MASCOT_KEYS.map((skin, i) => (
-            <motion.div
-              key={skin}
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5 + i * 0.07, type: 'spring', bounce: 0.4 }}
-              whileHover={{ y: -12, scale: 1.1 }}
-              className="cursor-pointer"
-              title={skin}
-            >
-              <PixelMascot skin={skin} size={90} />
-            </motion.div>
-          ))}
+      {/* ── CSS animations for SVG characters ── */}
+      <style>{`
+        @keyframes a-bounce-kf   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        @keyframes a-float-kf    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+        @keyframes a-walk-r-kf   { 0%,100%{transform:rotate(0deg)} 50%{transform:rotate(25deg)} }
+        @keyframes a-walk-l-kf   { 0%,100%{transform:rotate(0deg)} 50%{transform:rotate(-25deg)} }
+        @keyframes a-swing-kf    { 0%,100%{transform:rotate(-15deg)} 50%{transform:rotate(15deg)} }
+        @keyframes a-tassel-kf   { 0%,100%{transform:rotate(-10deg)} 50%{transform:rotate(10deg)} }
+        @keyframes a-headbang-kf { 0%,100%{transform:rotate(-8deg)} 50%{transform:rotate(8deg)} }
+        @keyframes a-strum-kf    { 0%,100%{transform:rotate(0deg)} 50%{transform:rotate(-20deg)} }
+        @keyframes a-stetho-kf   { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
+        @keyframes a-write-kf    { 0%,100%{transform:translateX(0)} 50%{transform:translateX(4px)} }
+        @keyframes a-plant-kf    { 0%,100%{transform:rotate(-10deg)} 50%{transform:rotate(10deg)} }
+        @keyframes a-dig-kf      { 0%,100%{transform:rotate(0deg)} 50%{transform:rotate(-20deg)} }
+        @keyframes a-pan-kf      { 0%,100%{transform:rotate(0deg)} 50%{transform:rotate(15deg)} }
+        @keyframes a-pancake-kf  { 0%,100%{transform:translateY(0) scaleY(1)} 40%{transform:translateY(-18px) scaleY(0.8)} 80%{transform:translateY(0) scaleY(1)} }
+        @keyframes a-paint-kf    { 0%,100%{transform:rotate(0deg)} 50%{transform:rotate(-15deg)} }
+        @keyframes a-palette-kf  { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
+        @keyframes a-drive-kf    { 0%,100%{transform:translateX(0)} 50%{transform:translateX(4px)} }
+        @keyframes a-bump-kf     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+        @keyframes a-kick-kf     { 0%,100%{transform:rotate(0deg)} 50%{transform:rotate(30deg)} }
+        @keyframes a-wheel-kf    { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+        @keyframes a-tail-kf     { 0%,100%{transform:rotate(-10deg)} 50%{transform:rotate(10deg)} }
+        @keyframes a-photo-kf    { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
+        @keyframes a-flash-kf    { 0%{r:0;opacity:1} 100%{r:20;opacity:0} }
+        @keyframes a-glow-kf     { 0%,100%{opacity:0.7;r:14} 50%{opacity:1;r:18} }
+        @keyframes a-gleam-kf    { 0%,100%{opacity:0} 50%{opacity:0.3} }
+        @keyframes a-blink-kf    { 0%,90%,100%{ry:3} 95%{ry:0.5} }
+        @keyframes a-flag-kf     { 0%,100%{transform:skewX(0deg)} 50%{transform:skewX(-10deg)} }
+        @keyframes a-type-l-kf   { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-2px)} }
+        @keyframes a-type-r-kf   { 0%,100%{transform:translateX(0)} 50%{transform:translateX(2px)} }
+
+        .a-bounce   { animation: a-bounce-kf 1.2s ease-in-out infinite }
+        .a-float    { animation: a-float-kf 2.5s ease-in-out infinite }
+        .a-walk-r   { animation: a-walk-r-kf 0.5s ease-in-out infinite alternate }
+        .a-walk-l   { animation: a-walk-l-kf 0.5s ease-in-out infinite alternate }
+        .a-swing    { animation: a-swing-kf 0.8s ease-in-out infinite alternate }
+        .a-tassel   { animation: a-tassel-kf 0.6s ease-in-out infinite alternate }
+        .a-headbang { animation: a-headbang-kf 0.3s ease-in-out infinite alternate }
+        .a-strum    { animation: a-strum-kf 0.25s ease-in-out infinite alternate }
+        .a-stetho   { animation: a-stetho-kf 1.5s ease-in-out infinite alternate }
+        .a-write    { animation: a-write-kf 0.4s ease-in-out infinite alternate }
+        .a-plant    { animation: a-plant-kf 1.2s ease-in-out infinite alternate }
+        .a-dig      { animation: a-dig-kf 0.8s ease-in-out infinite alternate }
+        .a-pan      { animation: a-pan-kf 1s ease-in-out infinite alternate }
+        .a-pancake  { animation: a-pancake-kf 1.2s ease-in-out infinite }
+        .a-paint    { animation: a-paint-kf 1s ease-in-out infinite alternate }
+        .a-palette  { animation: a-palette-kf 1.4s ease-in-out infinite alternate }
+        .a-drive    { animation: a-drive-kf 0.6s ease-in-out infinite alternate }
+        .a-bump     { animation: a-bump-kf 0.4s ease-in-out infinite alternate }
+        .a-kick     { animation: a-kick-kf 0.5s ease-in-out infinite alternate }
+        .a-wheel    { animation: a-wheel-kf 0.5s linear infinite }
+        .a-tail     { animation: a-tail-kf 0.6s ease-in-out infinite alternate }
+        .a-photo    { animation: a-photo-kf 1.5s ease-in-out infinite alternate }
+        .a-flash    { animation: a-flash-kf 2s ease-out infinite }
+        .a-glow     { animation: a-glow-kf 1.5s ease-in-out infinite }
+        .a-gleam    { animation: a-gleam-kf 2s ease-in-out infinite }
+        .a-blink    { animation: a-blink-kf 3s ease-in-out infinite }
+        .a-flag     { animation: a-flag-kf 0.8s ease-in-out infinite alternate }
+        .a-type-l   { animation: a-type-l-kf 0.15s ease-in-out infinite alternate }
+        .a-type-r   { animation: a-type-r-kf 0.15s ease-in-out infinite alternate }
+      `}</style>
+
+      {/* ── Animated landscape scene ── */}
+      <div className="relative w-full" style={{ height: '85vh', marginTop: '-330px' }}>
+        <div className="absolute bottom-0 left-0 w-full h-full overflow-hidden pointer-events-none z-10">
+          <svg className="w-full h-full" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMax meet">
+            <path d="M 0 350 Q 720 450 1440 350 L 1440 800 L 0 800 Z" fill="#10b981" />
+            <path d="M -220 300 Q 150 150 420 800 L -200 800 Z" fill="#018159" opacity="1"/>
+            <path d="M 1640 300 Q 1290 150 1020 800 L 1640 800 Z" fill="#018159" opacity="1"/>
+            <defs>
+              <g id="grass-tuft"><path d="M 0 10 Q 5 0 10 10 Q 15 0 20 10 Q 10 5 0 10 Z" fill="#059669" opacity="0.4" /></g>
+              <g id="big-tree">
+                <path d="M-5,0 L-5,-80 L5,-80 L5,0 Z" fill="#78350f" />
+                <circle cx="0" cy="-90" r="40" fill="#059669" />
+                <circle cx="-30" cy="-70" r="35" fill="#047857" />
+                <circle cx="30" cy="-75" r="30" fill="#065f46" />
+                <circle cx="-15" cy="-40" r="25" fill="#10b981" />
+                <circle cx="20" cy="-45" r="25" fill="#34d399" />
+              </g>
+              <g id="fence-post">
+                <rect x="-4" y="-40" width="8" height="40" fill="#ffffff" rx="1" />
+                <path d="M -4 -39 L 0 -45 L 4 -39 Z" fill="#ffffff" />
+                <rect x="0" y="-39" width="1" height="39" fill="#e2e8f0" />
+              </g>
+            </defs>
+
+            <use href="#big-tree" x="200" y="420" transform="scale(1.3)" />
+            <use href="#grass-tuft" x="150" y="450" transform="scale(1.5)" />
+            <use href="#grass-tuft" x="280" y="490" transform="scale(1.2)" />
+            <use href="#grass-tuft" x="380" y="520" transform="scale(2)" />
+            <use href="#grass-tuft" x="80" y="650" transform="scale(1.8)" />
+            <use href="#grass-tuft" x="320" y="680" transform="scale(1.4)" />
+            <use href="#grass-tuft" x="780" y="700" transform="scale(2.5)" />
+            <use href="#grass-tuft" x="1150" y="480" transform="scale(1.2)" />
+            <use href="#grass-tuft" x="980" y="620" transform="scale(1.7)" />
+            <use href="#grass-tuft" x="1100" y="670" transform="scale(1.4)" />
+            <use href="#grass-tuft" x="1350" y="680" transform="scale(2.2)" />
+
+            <path d="M 300 800 C 600 800, 900 500, 1280 290 L 1320 290 C 1200 500, 1100 800, 900 800 Z" fill="#f8f3e6" />
+
+            <g id="right-fences">
+              <path d="M 900 800 C 1100 800, 1200 500, 1340 300" stroke="#ffffff" strokeWidth="6" fill="none" transform="translate(0, -28)" />
+              <path d="M 900 800 C 1100 800, 1200 500, 1340 300" stroke="#ffffff" strokeWidth="6" fill="none" transform="translate(0, -12)" />
+              <use href="#fence-post" transform="translate(900, 800) scale(1.5)" />
+              <use href="#fence-post" transform="translate(970, 770) scale(1.3)" />
+              <use href="#fence-post" transform="translate(1040, 700) scale(1.1)" />
+              <use href="#fence-post" transform="translate(1110, 610) scale(0.9)" />
+              <use href="#fence-post" transform="translate(1180, 510) scale(0.7)" />
+              <use href="#fence-post" transform="translate(1250, 410) scale(0.5)" />
+              <use href="#fence-post" transform="translate(1290, 350) scale(0.35)" />
+              <use href="#fence-post" transform="translate(1325, 310) scale(0.2)" />
+            </g>
+
+            <g id="left-fences">
+              <path d="M 300 800 C 600 800, 900 500, 1260 300" stroke="#ffffff" strokeWidth="6" fill="none" transform="translate(0, -28)" />
+              <path d="M 300 800 C 600 800, 900 500, 1260 300" stroke="#ffffff" strokeWidth="6" fill="none" transform="translate(0, -12)" />
+              <use href="#fence-post" transform="translate(300, 800) scale(1.5)" />
+              <use href="#fence-post" transform="translate(460, 770) scale(1.3)" />
+              <use href="#fence-post" transform="translate(610, 700) scale(1.1)" />
+              <use href="#fence-post" transform="translate(750, 610) scale(0.9)" />
+              <use href="#fence-post" transform="translate(890, 510) scale(0.7)" />
+              <use href="#fence-post" transform="translate(1020, 410) scale(0.5)" />
+              <use href="#fence-post" transform="translate(1120, 350) scale(0.35)" />
+              <use href="#fence-post" transform="translate(1220, 310) scale(0.2)" />
+            </g>
+
+            {/* House */}
+            <g transform="translate(1300, 285) scale(0.85)">
+              <rect x="-40" y="-40" width="80" height="40" fill="#ffffff" />
+              <rect x="-45" y="-40" width="90" height="5" fill="#e2e8f0" />
+              <polygon points="-50,-40 0,-85 50,-40" fill="#ef4444" />
+              <polygon points="-40,-40 0,-75 40,-40" fill="#dc2626" opacity="0.4" />
+              <rect x="-25" y="-75" width="12" height="25" fill="#ef4444" />
+              <rect x="-28" y="-80" width="18" height="5" fill="#ffffff" />
+              <rect x="-12" y="-20" width="12" height="20" fill="#1e293b" />
+              <circle cx="-3" cy="-10" r="1.5" fill="#fcd34d" />
+              <rect x="15" y="-25" width="14" height="14" fill="#38bdf8" />
+              <rect x="15" y="-25" width="14" height="14" fill="none" stroke="#e2e8f0" strokeWidth="2" />
+              <line x1="22" y1="-25" x2="22" y2="-11" stroke="#e2e8f0" strokeWidth="2" />
+              <line x1="15" y1="-18" x2="29" y2="-18" stroke="#e2e8f0" strokeWidth="2" />
+            </g>
+
+            {/* Astronaut */}
+            <svg x="1140" y="190" width="90" height="90" viewBox="0 0 100 100" overflow="visible">
+              <g><g className="a-float"><ellipse cx="50" cy="90" rx="35" ry="10" fill="#cbd5e1" /><ellipse cx="35" cy="87" rx="6" ry="2" fill="#94a3b8" /><ellipse cx="65" cy="92" rx="4" ry="1.5" fill="#94a3b8" /><ellipse cx="48" cy="93" rx="8" ry="2" fill="#94a3b8" /><rect x="20" y="30" width="60" height="38" fill="#f5f5f5" rx="15" /><rect x="28" y="68" width="16" height="14" fill="#f5f5f5" rx="4" /><rect x="56" y="68" width="16" height="14" fill="#f5f5f5" rx="4" /><rect x="26" y="80" width="20" height="8" fill="#9e9e9e" rx="3" /><rect x="54" y="80" width="20" height="8" fill="#9e9e9e" rx="3" /><line x1="30" y1="50" x2="70" y2="50" stroke="#e0e0e0" strokeWidth="2" /><rect x="35" y="55" width="10" height="6" fill="#64b5f6" rx="1" /><rect x="48" y="55" width="6" height="6" fill="#e53935" rx="1" /><rect x="57" y="55" width="6" height="6" fill="#4caf50" rx="1" /><circle cx="50" cy="35" r="22" fill="#ffffff" stroke="#e0e0e0" strokeWidth="2" /><ellipse cx="50" cy="35" rx="16" ry="12" fill="#1e88e5" /><path d="M 40 30 Q 50 25 60 30" stroke="#90caf9" strokeWidth="3" fill="none" strokeLinecap="round" /><circle cx="45" cy="35" r="2" fill="#fff" /><circle cx="55" cy="35" r="2" fill="#fff" /><rect x="15" y="45" width="12" height="12" fill="#f5f5f5" rx="4" /><rect x="73" y="45" width="12" height="12" fill="#f5f5f5" rx="4" /><rect x="80" y="20" width="4" height="60" fill="#9e9e9e" rx="2" /><g className="a-flag"><path d="M 82 25 L 105 25 L 100 35 L 105 45 L 82 45 Z" fill="#e53935" /></g></g></g>
+            </svg>
+
+            {/* Graduate */}
+            <svg x="1200" y="320" width="80" height="80" viewBox="0 0 100 100" overflow="visible">
+              <g transform="translate(50,50) scale(-1, 1) translate(-50,-50)"><g className="a-bounce"><g className="a-walk-r" style={{ transformOrigin: '64px 65px' }}><rect x="58" y="65" width="12" height="18" fill="#f27d42" rx="2" /><path d="M 58 80 L 75 80 L 72 85 L 58 85 Z" fill="#212121" /></g><g className="a-walk-l" style={{ transformOrigin: '36px 65px' }}><rect x="30" y="65" width="12" height="18" fill="#f27d42" rx="2" /><path d="M 30 80 L 47 80 L 44 85 L 30 85 Z" fill="#212121" /></g><rect x="25" y="30" width="50" height="35" fill="#f27d42" rx="10" /><circle cx="38" cy="40" r="6" fill="#fff" /><circle cx="62" cy="40" r="6" fill="#fff" /><circle cx="40" cy="40" r="3" fill="#000" className="a-blink" /><circle cx="64" cy="40" r="3" fill="#000" className="a-blink" /><path d="M 23 50 L 45 50 L 50 65 L 23 65 Z" fill="#2c3e50" /><path d="M 77 50 L 55 50 L 50 65 L 77 65 Z" fill="#2c3e50" /><polygon points="45,50 55,50 50,58" fill="#fff" /><polygon points="48,53 52,53 50,65" fill="#c0392b" /><polygon points="50,15 20,25 50,35 80,25" fill="#212121" /><path d="M 35 25 L 65 25 L 60 35 L 40 35 Z" fill="#212121" /><g transform="translate(25, 25)" className="a-tassel"><line x1="0" y1="0" x2="0" y2="15" stroke="#f1c40f" strokeWidth="2" /><circle cx="0" cy="17" r="2" fill="#f1c40f" /></g><rect x="70" y="55" width="10" height="12" fill="#f27d42" rx="3" /><g className="a-swing" style={{ transformOrigin: '25px 55px' }}><rect x="20" y="55" width="10" height="12" fill="#f27d42" rx="3" /><rect x="10" y="65" width="28" height="20" fill="#5d4037" rx="3" /><rect x="16" y="61" width="16" height="6" fill="none" stroke="#3e2723" strokeWidth="3" rx="2" /><rect x="22" y="70" width="4" height="4" fill="#ffb300" /></g></g></g>
+            </svg>
+
+            {/* Gardener */}
+            <svg x="1000" y="350" width="90" height="90" viewBox="0 0 100 100" overflow="visible">
+              <g className="a-bounce"><rect x="25" y="30" width="50" height="35" fill="#66bb6a" rx="10" /><rect x="32" y="65" width="10" height="12" fill="#66bb6a" /><rect x="58" y="65" width="10" height="12" fill="#66bb6a" /><rect x="30" y="75" width="14" height="6" fill="#795548" rx="2" /><rect x="56" y="75" width="14" height="6" fill="#795548" rx="2" /><circle cx="40" cy="45" r="6" fill="#fff" /><circle cx="60" cy="45" r="6" fill="#fff" /><circle cx="42" cy="45" r="3" fill="#000" className="a-blink" /><circle cx="62" cy="45" r="3" fill="#000" className="a-blink" /><circle cx="36" cy="48" r="2" fill="#81c784" /><circle cx="64" cy="48" r="2" fill="#81c784" /><path d="M 23 52 L 77 52 L 80 65 L 20 65 Z" fill="#fff9c4" rx="2" /><circle cx="30" cy="56" r="2.5" fill="#f48fb1" /><circle cx="45" cy="60" r="2.5" fill="#f48fb1" /><circle cx="60" cy="55" r="2.5" fill="#f48fb1" /><circle cx="70" cy="62" r="2.5" fill="#f48fb1" /><ellipse cx="50" cy="22" rx="25" ry="8" fill="#d4e157" /><path d="M 35 22 Q 50 5 65 22 Z" fill="#cddc39" /><path d="M 35 22 Q 50 15 65 22" stroke="#ffb74d" strokeWidth="3" fill="none" /><g className="a-plant" style={{ transformOrigin: '73px 58px' }}><rect x="63" y="56" width="10" height="10" fill="#66bb6a" rx="3" /><path d="M 68 53 L 88 53 L 84 66 L 72 66 Z" fill="#d84315" /><path d="M 78 53 Q 68 38 73 33 Q 83 38 78 53" fill="#4caf50" /><path d="M 78 53 Q 88 33 83 28 Q 73 33 78 53" fill="#8bc34a" /></g><g className="a-dig" style={{ transformOrigin: '27px 60px' }}><rect x="22" y="55" width="10" height="10" fill="#66bb6a" rx="3" /><rect x="18" y="50" width="4" height="15" fill="#795548" rx="1" transform="rotate(-20 20 57)" /><path d="M 12 62 L 18 75 L 22 73 Z" fill="#9e9e9e" /></g></g>
+            </svg>
+
+            {/* Chef */}
+            <svg x="1120" y="440" width="140" height="140" viewBox="0 0 100 100" overflow="visible">
+              <g transform="translate(50,50) scale(-1, 1) translate(-50,-50)"><g className="a-bounce"><rect x="25" y="30" width="50" height="35" fill="#fdfdfd" rx="10" /><rect x="32" y="65" width="10" height="12" fill="#e0e0e0" /><rect x="58" y="65" width="10" height="12" fill="#e0e0e0" /><rect x="30" y="75" width="14" height="6" fill="#424242" rx="2" /><rect x="56" y="75" width="14" height="6" fill="#424242" rx="2" /><circle cx="38" cy="40" r="6" fill="#2c3e50" /><circle cx="62" cy="40" r="6" fill="#2c3e50" /><circle cx="38" cy="40" r="5" fill="#fff" /><circle cx="62" cy="40" r="5" fill="#fff" /><circle cx="40" cy="40" r="3" fill="#000" className="a-blink" /><circle cx="64" cy="40" r="3" fill="#000" className="a-blink" /><circle cx="42" cy="55" r="1.5" fill="#9e9e9e" /><circle cx="42" cy="60" r="1.5" fill="#9e9e9e" /><circle cx="58" cy="55" r="1.5" fill="#9e9e9e" /><circle cx="58" cy="60" r="1.5" fill="#9e9e9e" /><path d="M 40 48 L 60 48 L 50 56 Z" fill="#e74c3c" /><path d="M 30 25 L 70 25 L 75 10 Q 60 0 50 10 Q 40 0 25 10 Z" fill="#ffffff" stroke="#eeeeee" strokeWidth="2" /><rect x="70" y="55" width="10" height="12" fill="#fdfdfd" rx="3" /><g className="a-pan" style={{ transformOrigin: '25px 55px' }}><rect x="20" y="55" width="10" height="12" fill="#fdfdfd" rx="3" /><rect x="-5" y="60" width="28" height="4" fill="#34495e" rx="2" /><path d="M -25 55 L -5 55 L -10 65 L -20 65 Z" fill="#2c3e50" /></g><ellipse cx="-15" cy="53" rx="8" ry="3" fill="#f1c40f" className="a-pancake" /></g></g>
+            </svg>
+
+            {/* Coder */}
+            <svg x="820" y="480" width="140" height="140" viewBox="0 0 100 100" overflow="visible">
+              <g className="a-bounce"><g transform="translate(45, -10)"><circle cx="5" cy="5" r="16" fill="#fcd34d" className="a-glow" /><path d="M0,8 C0,4 10,4 10,8 C10,11 7,13 7,16 L3,16 C3,13 0,11 0,8 Z" fill="#fbbf24" /><rect x="3" y="16" width="4" height="3" fill="#9ca3af" /><path d="M3,20 L7,20 L5,22 Z" fill="#4b5563" /><line x1="5" y1="2" x2="5" y2="-2" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" /><line x1="-1" y1="4" x2="-4" y2="1" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" /><line x1="11" y1="4" x2="14" y2="1" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" /></g><rect x="25" y="30" width="50" height="35" fill="#64b5f6" rx="10" /><rect x="32" y="65" width="10" height="12" fill="#1565c0" /><rect x="58" y="65" width="10" height="12" fill="#1565c0" /><rect x="28" y="75" width="16" height="6" fill="#212121" rx="2" /><rect x="56" y="75" width="16" height="6" fill="#212121" rx="2" /><circle cx="30" cy="25" r="8" fill="#1565c0" /><circle cx="45" cy="20" r="10" fill="#1565c0" /><circle cx="60" cy="22" r="9" fill="#1565c0" /><circle cx="70" cy="30" r="7" fill="#1565c0" /><circle cx="25" cy="35" r="7" fill="#1565c0" /><path d="M 25 50 L 75 50 L 70 65 L 30 65 Z" fill="#8d6e63" /><polygon points="45,50 55,50 50,58" fill="#bbdefb" /><polygon points="45,52 50,55 45,58" fill="#d32f2f" /><polygon points="55,52 50,55 55,58" fill="#d32f2f" /><circle cx="50" cy="55" r="1.5" fill="#b71c1c" /><g><circle cx="38" cy="42" r="8" fill="none" stroke="#e3f2fd" strokeWidth="2" /><circle cx="62" cy="42" r="8" fill="none" stroke="#e3f2fd" strokeWidth="2" /><line x1="46" y1="42" x2="54" y2="42" stroke="#e3f2fd" strokeWidth="2" /><circle cx="38" cy="42" r="3" fill="#000" className="a-blink" /><circle cx="62" cy="42" r="3" fill="#000" className="a-blink" /></g><rect x="18" y="52" width="12" height="8" fill="#e3f2fd" rx="3" transform="rotate(-15 25 55)" /><rect x="25" y="56" width="8" height="6" fill="#64b5f6" rx="2" className="a-type-l" /><g transform="translate(55, 52)"><path d="M 5 0 L 25 0 L 22 15 L 2 15 Z" fill="#b0bec5" /><path d="M 0 15 L 25 15 L 28 20 L -3 20 Z" fill="#90a4ae" /><circle cx="13" cy="7" r="2" fill="#fff" opacity="0.6" /></g><rect x="68" y="50" width="12" height="8" fill="#e3f2fd" rx="3" transform="rotate(20 75 55)" /><rect x="62" y="58" width="8" height="6" fill="#64b5f6" rx="2" className="a-type-r" /></g>
+            </svg>
+
+            {/* Doctor */}
+            <svg x="930" y="480" width="140" height="140" viewBox="0 0 100 100" overflow="visible">
+              <g transform="translate(50,50) scale(-1, 1) translate(-50,-50)"><g className="a-bounce"><rect x="25" y="30" width="50" height="35" fill="#b2ebf2" rx="10" /><rect x="32" y="65" width="10" height="12" fill="#00838f" /><rect x="58" y="65" width="10" height="12" fill="#00838f" /><rect x="30" y="75" width="14" height="6" fill="#ffffff" rx="2" /><rect x="56" y="75" width="14" height="6" fill="#ffffff" rx="2" /><circle cx="38" cy="40" r="6" fill="#fff" /><circle cx="62" cy="40" r="6" fill="#fff" /><circle cx="40" cy="40" r="3" fill="#000" className="a-blink" /><circle cx="64" cy="40" r="3" fill="#000" className="a-blink" /><path d="M 23 45 L 45 45 L 45 65 L 23 65 Z" fill="#ffffff" /><path d="M 77 45 L 55 45 L 55 65 L 77 65 Z" fill="#ffffff" /><path d="M 45 45 L 55 45 L 50 55 Z" fill="#80deea" /><g className="a-stetho" style={{ transformOrigin: '50px 45px' }}><path d="M 35 45 Q 50 65 65 45" fill="none" stroke="#424242" strokeWidth="2.5" /><line x1="50" y1="55" x2="50" y2="62" stroke="#424242" strokeWidth="2.5" /><circle cx="50" cy="64" r="3" fill="#cfd8dc" stroke="#424242" strokeWidth="1" /></g><rect x="70" y="55" width="10" height="10" fill="#b2ebf2" rx="3" /><rect x="65" y="45" width="18" height="22" fill="#d7ccc8" rx="2" transform="rotate(10 65 45)" /><rect x="67" y="47" width="14" height="18" fill="#ffffff" transform="rotate(10 65 45)" /><rect x="72" y="43" width="6" height="3" fill="#9e9e9e" transform="rotate(10 65 45)" /><g className="a-write" style={{ transformOrigin: '30px 60px' }}><rect x="25" y="52" width="10" height="10" fill="#b2ebf2" rx="3" /><rect x="30" y="48" width="3" height="12" fill="#1e88e5" rx="1" transform="rotate(30 30 48)" /><polygon points="34,58 35,61 32,60" fill="#212121" /></g></g></g>
+            </svg>
+
+            {/* Artist */}
+            <svg x="560" y="480" width="130" height="130" viewBox="0 0 100 100" overflow="visible">
+              <g className="a-bounce"><path d="M 25 35 Q 25 25 35 25 L 45 25 Q 50 25 50 30 L 50 65 L 25 65 Z" fill="#9575cd" />
+                <path d="M 50 30 Q 50 25 55 25 L 65 25 Q 75 25 75 35 L 75 65 L 50 65 Z" fill="#ff8a65" />
+                <path d="M 50 25 Q 45 35 50 45 Q 55 55 50 65" fill="none" stroke="#fff" strokeWidth="2" opacity="0.5"/>
+                <rect x="30" y="65" width="12" height="15" fill="#ff8a65" rx="2" /><rect x="58" y="65" width="12" height="15" fill="#ff8a65" rx="2" />
+                <circle cx="38" cy="40" r="6" fill="#fff" /><circle cx="62" cy="40" r="6" fill="#fff" />
+                <circle cx="40" cy="40" r="3" fill="#000" className="a-blink" /><circle cx="64" cy="40" r="3" fill="#000" className="a-blink" />
+                <ellipse cx="40" cy="22" rx="16" ry="6" fill="#795548" transform="rotate(-15 40 22)" /><circle cx="44" cy="15" r="3" fill="#795548" />
+                <path d="M 25 50 L 75 50 L 75 65 L 25 65 Z" fill="#5c6bc0" />
+                <rect x="30" y="45" width="5" height="10" fill="#3949ab" rx="1" /><rect x="65" y="45" width="5" height="10" fill="#3949ab" rx="1" />
+                <circle cx="32.5" cy="52" r="1.5" fill="#fdd835" /><circle cx="67.5" cy="52" r="1.5" fill="#fdd835" />
+                <rect x="40" y="52" width="20" height="8" fill="#3949ab" rx="2" />
+                <circle cx="35" cy="60" r="2" fill="#e91e63" /><circle cx="65" cy="58" r="1.5" fill="#00bcd4" />
+                <g className="a-palette"><rect x="70" y="38" width="12" height="12" fill="#ff8a65" rx="4" /><path d="M 75 35 Q 95 30 90 50 Q 85 60 70 50 Z" fill="#d7ccc8" /><circle cx="75" cy="45" r="3" fill="#5d4037" /><circle cx="82" cy="38" r="2" fill="#f44336" /><circle cx="88" cy="42" r="2" fill="#2196f3" /><circle cx="85" cy="48" r="2" fill="#ffeb3b" /></g>
+                <g className="a-paint" style={{ transformOrigin: '23px 51px' }}><rect x="18" y="45" width="10" height="12" fill="#ff8a65" rx="4" /><rect x="12" y="20" width="4" height="35" fill="#8d6e63" transform="rotate(-15 14 37)" rx="1" /><path d="M 8 15 Q 15 10 18 20 Z" fill="#d32f2f" transform="rotate(-15 14 37)" /></g>
+                <g transform="translate(85, 25)"><line x1="15" y1="10" x2="0" y2="45" stroke="#8b4513" strokeWidth="3" strokeLinecap="round" /><line x1="15" y1="10" x2="30" y2="45" stroke="#8b4513" strokeWidth="3" strokeLinecap="round" /><line x1="15" y1="10" x2="15" y2="50" stroke="#8b4513" strokeWidth="3" strokeLinecap="round" /><rect x="0" y="5" width="30" height="25" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="2" rx="2" /><rect x="4" y="9" width="22" height="17" fill="#e0f2fe" /><circle cx="20" cy="14" r="3" fill="#fcd34d" /><path d="M 4 26 L 10 18 L 16 26 Z" fill="#34d399" /><path d="M 12 26 L 18 16 L 26 26 Z" fill="#10b981" /></g>
+              </g>
+            </svg>
+
+            {/* Rocker */}
+            <svg x="510" y="590" width="180" height="180" viewBox="0 0 100 100" overflow="visible">
+              <g className="a-bounce"><g className="a-headbang"><rect x="25" y="30" width="50" height="35" fill="#d500f9" rx="10" /><rect x="30" y="38" width="18" height="8" fill="#212121" rx="2" /><rect x="52" y="38" width="18" height="8" fill="#212121" rx="2" /><rect x="48" y="40" width="4" height="2" fill="#212121" /><line x1="32" y1="38" x2="46" y2="44" stroke="#424242" strokeWidth="1" /><path d="M 25 35 Q 50 15 75 35" fill="none" stroke="#00e5ff" strokeWidth="4" /><rect x="18" y="32" width="8" height="16" fill="#00b8d4" rx="4" /><rect x="74" y="32" width="8" height="16" fill="#00b8d4" rx="4" /></g><rect x="32" y="65" width="10" height="12" fill="#1a237e" /><rect x="58" y="65" width="10" height="12" fill="#1a237e" /><rect x="30" y="75" width="14" height="8" fill="#ff4081" rx="2" /><rect x="56" y="75" width="14" height="8" fill="#ff4081" rx="2" /><rect x="30" y="81" width="14" height="2" fill="#fff" /><rect x="56" y="81" width="14" height="2" fill="#fff" /><rect x="70" y="50" width="10" height="10" fill="#d500f9" rx="3" /><g transform="rotate(-20 50 60)"><rect x="25" y="58" width="50" height="4" fill="#8d6e63" /><path d="M 25 50 L 40 50 Q 45 60 40 70 L 25 70 Q 15 60 25 50 Z" fill="#ff1744" /><circle cx="35" cy="60" r="4" fill="#ffffff" /><rect x="75" y="56" width="6" height="8" fill="#424242" rx="1" /></g><g className="a-strum" style={{ transformOrigin: '30px 65px' }}><rect x="28" y="55" width="10" height="12" fill="#d500f9" rx="3" /><polygon points="38,62 42,65 38,68" fill="#fff" /></g></g>
+            </svg>
+
+            {/* Scooter */}
+            <svg x="780" y="530" width="180" height="180" viewBox="0 0 100 100" overflow="visible">
+              <g transform="translate(50,50) scale(-1, 1) translate(-50,-50)"><g className="a-drive"><g className="a-bump"><rect x="20" y="80" width="55" height="6" fill="#95a5a6" rx="3" /><rect x="65" y="45" width="6" height="38" fill="#7f8c8d" rx="2" /><rect x="55" y="45" width="20" height="5" fill="#34495e" rx="2" /><g className="a-wheel" style={{ transformOrigin: '70px 86px' }}><circle cx="70" cy="86" r="6" fill="#2c3e50" /><circle cx="70" cy="86" r="2" fill="#ecf0f1" /></g><rect x="28" y="82" width="4" height="4" fill="#34495e" /><g className="a-wheel" style={{ transformOrigin: '30px 86px' }}><circle cx="30" cy="86" r="6" fill="#2c3e50" /><circle cx="30" cy="86" r="2" fill="#ecf0f1" /></g><g><rect x="25" y="35" width="35" height="30" fill="#f1c40f" rx="8" /><path d="M 25 35 Q 42 15 60 35 Z" fill="#d35400" /><rect x="23" y="32" width="39" height="6" fill="#e67e22" rx="2" /><circle cx="40" cy="45" r="6" fill="#fff" /><circle cx="55" cy="45" r="6" fill="#fff" /><circle cx="42" cy="45" r="3" fill="#000" className="a-blink" /><circle cx="57" cy="45" r="3" fill="#000" className="a-blink" /><rect x="20" y="52" width="45" height="18" fill="#c0392b" rx="5" /><rect x="35" y="58" width="15" height="10" fill="#e74c3c" rx="2" /><rect x="45" y="43" width="15" height="10" fill="#c0392b" rx="4" /><rect x="55" y="44" width="8" height="8" fill="#f1c40f" rx="2" /><rect x="45" y="70" width="12" height="12" fill="#2980b9" /><rect x="45" y="78" width="18" height="6" fill="#d35400" rx="2" /><rect x="45" y="82" width="18" height="2" fill="#fff" /><g className="a-kick" style={{ transformOrigin: '31px 70px' }}><rect x="25" y="70" width="12" height="12" fill="#2980b9" /><rect x="15" y="78" width="18" height="6" fill="#d35400" rx="2" /><rect x="15" y="82" width="18" height="2" fill="#fff" /></g></g></g></g></g>
+            </svg>
+
+            {/* Photographer */}
+            <svg x="150" y="550" width="220" height="220" viewBox="0 0 100 100" overflow="visible">
+              <g className="a-bounce"><g className="a-tail" style={{ transformOrigin: '30px 35px' }}><path d="M 30 35 Q 10 20 5 50 Q 25 55 30 40 Z" fill="#ffee58" /><rect x="25" y="32" width="6" height="10" fill="#e91e63" rx="2" transform="rotate(15 25 32)" /></g><path d="M 50 40 Q 50 25 35 25 Q 25 25 25 40 L 25 65 L 75 65 L 75 40 Q 75 25 60 25 Q 50 25 50 40 Z" fill="#f06292" /><rect x="30" y="65" width="12" height="12" fill="#f06292" rx="2" /><rect x="58" y="65" width="12" height="12" fill="#f06292" rx="2" /><path d="M 28 77 L 44 77 L 44 83 L 28 83 Z" fill="#f8bbd0" rx="2" /><path d="M 56 77 L 72 77 L 72 83 L 56 83 Z" fill="#f8bbd0" rx="2" /><circle cx="38" cy="42" r="6" fill="#fff" /><circle cx="62" cy="42" r="6" fill="#fff" /><circle cx="40" cy="42" r="3" fill="#000" className="a-blink" /><circle cx="64" cy="42" r="3" fill="#000" className="a-blink" /><path d="M 34 38 L 30 35 M 36 36 L 33 32" stroke="#000" strokeWidth="2" strokeLinecap="round" /><path d="M 66 38 L 70 35 M 64 36 L 67 32" stroke="#000" strokeWidth="2" strokeLinecap="round" /><path d="M 20 50 L 30 50 L 30 65 L 20 65 Z" fill="#ab47bc" rx="2" /><path d="M 70 50 L 80 50 L 80 65 L 70 65 Z" fill="#ab47bc" rx="2" /><path d="M 30 50 L 35 50 L 35 65 L 30 65 Z" fill="#81d4fa" /><path d="M 65 50 L 70 50 L 70 65 L 65 65 Z" fill="#81d4fa" /><g className="a-photo"><rect x="32" y="55" width="10" height="10" fill="#f06292" rx="3" /><rect x="58" y="55" width="10" height="10" fill="#f06292" rx="3" /><rect x="38" y="52" width="24" height="16" fill="#424242" rx="3" /><rect x="42" y="49" width="6" height="4" fill="#212121" rx="1" /><circle cx="50" cy="60" r="6" fill="#90caf9" stroke="#616161" strokeWidth="2" /><circle cx="50" cy="60" r="2" fill="#fff" opacity="0.8" /><circle cx="50" cy="60" r="0" fill="#fff" className="a-flash" /></g></g>
+            </svg>
+
+          </svg>
         </div>
       </div>
 
       {/* ── Feature cards ── */}
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 pb-20 grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <div ref={infoRef} className="relative z-20 w-full max-w-6xl mx-auto px-6 pb-20 grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
         {[
           { icon: '👁️', title: 'Blink Rate Monitor', desc: 'MediaPipe AI tracks your blink rate in real-time and alerts you when you stop blinking enough.' },
           { icon: '📏', title: 'Distance Detection', desc: 'Warns you when you are too close or too far from your screen to prevent strain.' },
@@ -378,11 +565,11 @@ function LandingPage() {
           <motion.div
             key={f.title}
             initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.8 }}
-            className="bg-white/10 border border-white/20 backdrop-blur-sm rounded-[28px] p-8 text-white hover:bg-white/15 transition-colors"
+            className="bg-white/15 border border-white/25 backdrop-blur-sm rounded-[28px] p-8 text-white hover:bg-white/20 transition-colors shadow-lg"
           >
             <div className="text-4xl mb-4">{f.icon}</div>
             <h3 className="font-black text-xl mb-2">{f.title}</h3>
-            <p className="text-white/70 font-medium">{f.desc}</p>
+            <p className="text-white/80 font-medium">{f.desc}</p>
           </motion.div>
         ))}
       </div>
