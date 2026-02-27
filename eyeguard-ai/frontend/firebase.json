@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "eyeguard-b9df2",
     "public": "dist",
     "ignore": [
       "firebase.json",
