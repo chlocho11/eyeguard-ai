@@ -27,7 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-gemini = GeminiService | None = None
+gemini : GeminiService | None = None
 
 @app.on_event("startup")
 async def _startup():

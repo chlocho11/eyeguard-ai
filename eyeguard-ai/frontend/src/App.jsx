@@ -21,6 +21,8 @@ import {
   computeDistanceAlert,
 } from "./blinkDetector";
 
+import { track } from "./firebaseClient";
+
 // ==========================================
 // 1. Global Styles & Animations
 // ==========================================
@@ -842,9 +844,12 @@ function LivePage() {
 
     aiRef.current.lastTs = now;
     try {
+      track("gemini_tip_requested", { mode });
       const { tip } = await getTip({ bpm: _bpm, too_close, too_far, drowsy: _drowsy, mode });
+      track("gemini_tip_received", { mode });
       notify(tip, { sound: true, vibrate: true });
-    } catch {
+    } catch (err) {
+      track("gemini_tip_error", { mode });
       notify('Take a 20-second break and blink slowly a few times.', { sound: true });
     }
   }
@@ -857,6 +862,7 @@ function LivePage() {
 
   // ── Start backend session on mount ───────────────────────────────────────
   useEffect(() => {
+    track("session_start", { mode });
     startSession(mode).then(id => setSessionId(id));
   }, []);
 
@@ -888,8 +894,10 @@ function LivePage() {
       // 1. Request camera
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        track("camera_permission_granted");
       } catch {
         setCamDenied(true);
+        track("camera_permission_denied");
         return;
       }
 
@@ -903,6 +911,7 @@ function LivePage() {
         faceRef.current = await createBlinkDetector();
       }
       setModelReady(true);
+      track("mediapipe_model_ready");
 
       const landmarker = faceRef.current;
 
