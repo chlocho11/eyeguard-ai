@@ -558,9 +558,13 @@ function LandingPage() {
       {/* ── Feature cards ── */}
       <div ref={infoRef} className="relative z-20 w-full max-w-6xl mx-auto px-6 pb-20 grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
         {[
-          { icon: '👁️', title: 'Blink Rate Monitor', desc: 'MediaPipe AI tracks your blink rate in real-time and alerts you when you stop blinking enough.' },
-          { icon: '📏', title: 'Distance Detection', desc: 'Warns you when you are too close or too far from your screen to prevent strain.' },
-          { icon: '🤖', title: 'Gemini AI Coach', desc: 'Get personalised, witty tips from Gemini AI — a Duolingo-style coach for your eyes.' },
+            { icon: '👁️', title: 'Blink Rate Monitor', desc: 'MediaPipe AI tracks your blink rate in real-time and alerts you when you stop blinking enough.' },
+            { icon: '📏', title: 'Distance Detection', desc: 'Warns you when you are too close or too far from your screen to prevent strain.' },
+            { icon: '😴', title: 'Drowsiness Alert', desc: 'Feeling sleepy while working or studying? Our AI detects prolonged eye closure and fatigue patterns to gently wake you up before productivity drops.' },
+            { icon: '📊', title: 'Personalized Dashboard', desc: 'Track your blink trends, focus sessions, and eye health insights with real-time analytics tailored to your productivity and health mode.' },
+            { icon: '🧘‍♂️', title: 'Eye Exercise Mode', desc: 'Feel strain building up? Get real-time guided eye relaxation and focus-shifting exercises powered by intelligent coaching to reduce fatigue and restore clarity.' },
+            { icon: '🤖', title: 'Gemini AI Coach', desc: 'Get personalised, witty tips from AI — a coach for your eyes.' },
+
         ].map(f => (
           <motion.div
             key={f.title}
