@@ -772,6 +772,8 @@ function LivePage() {
   const [sessionTime, setSessionTime]   = useState(0);
   const [totalBlinks, setTotalBlinks]   = useState(0);
   const [drowsyCount, setDrowsyCount]   = useState(0);
+  const [coachTip, setCoachTip]     = useState("I'm watching your eyeballs (lovingly). Blink normally and keep a comfy distance.");
+  const [coachTipTs, setCoachTipTs] = useState(0);
   const [banner, setBanner]             = useState(null);
   const [sessionId, setSessionId]       = useState(null);
   const [camDenied, setCamDenied]       = useState(false);
@@ -831,7 +833,22 @@ function LivePage() {
   async function maybeAI() {
     const now = Date.now();
     if (now - aiRef.current.lastTs < 60_000) return; // 1-min cooldown
-
+    if (tip && typeof tip === 'string') {
+        setCoachTip(tip.trim());
+        setCoachTipTs(Date.now());
+        }
+    const fallback = 'Take a 20-second break, relax your shoulders, then blink slowly 6 times.';
+        setCoachTip(fallback);
+        setCoachTipTs(Date.now());
+        notify(fallback, { sound: true });
+    const mascotSubtitle = (() => {
+        if (coachTip && Date.now() - coachTipTs < 5 * 60_000) return coachTip;
+        if (tooClose) return 'Back up a little — your screen is not a hug target.';
+        if (tooFar) return "Scoot closer so you don't squint like a detective.";
+        if (drowsy) return 'Quick reset: stand up, stretch, and drink water.';
+        if (bpm < 10) return 'Blink check: your eyes need tiny breaks too.';
+        return 'Steady pace. Keep blinking and stay comfy.';
+        })();
     const _bpm      = bpmRef.current;
     const too_close = tooCloseRef.current;
     const too_far   = tooFarRef.current;
