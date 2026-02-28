@@ -1,4 +1,4 @@
-# eyeguard-ai
+# EyeFuard
 # Live Demo
 https://eyeguard-b9df2.web.app
 
