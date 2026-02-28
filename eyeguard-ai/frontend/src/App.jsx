@@ -1469,8 +1469,61 @@ function SettingsPage() {
     const [notifs, setNotifs] = useState(['banner', 'sound']);
     const toggleNotif = (key) => setNotifs(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key]);
     const cardBg = isDark ? 'bg-[#1D2B26] border-[#3D6055] text-white' : 'bg-[#FCF9F2] border-white text-[#3D4035]';
+    
+    // --- Notification demo helpers (Banner + Sound) ---
+    const playChime = () => {
+    try {
+        // Simple "ding" using Web Audio (no mp3 file needed)
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+
+        o.type = "sine";
+        o.frequency.value = 880; // A5
+        g.gain.value = 0.0001;
+
+        o.connect(g);
+        g.connect(ctx.destination);
+
+        o.start();
+
+        // quick attack + decay
+        g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+
+        o.stop(ctx.currentTime + 0.27);
+
+        // cleanup
+        setTimeout(() => ctx.close?.(), 350);
+    } catch (e) {
+        console.warn("Sound blocked / unsupported:", e);
+    }
+    };
+
+    const [banner, setBanner] = useState(null);
+    // banner: { title, message, type } or null
+
+    const showBanner = ({ title, message, type = "info" }) => {
+    setBanner({ title, message, type });
+    // auto-hide after 3.5s
+    window.clearTimeout(showBanner._t);
+    showBanner._t = window.setTimeout(() => setBanner(null), 3500);
+    };
+
+    // Call this whenever you want to send an alert
+    const notify = ({ title, message, type = "info" }) => {
+    if (dnd) return;
+
+    // Banner Pop-up
+    if (notifs.includes("banner")) showBanner({ title, message, type });
+
+    // Sound Chime
+    if (notifs.includes("sound")) playChime();
+    };
 
   return (
+    
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="pt-32 pb-20 px-8 max-w-4xl mx-auto">
       <div className="flex items-center gap-4 mb-10">
         <button onClick={() => navigate('/home')} className={`p-2 rounded-full ${isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-white hover:bg-slate-50'} transition-colors`}><ArrowLeft size={20}/></button>
